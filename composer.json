@@ -1,0 +1,21 @@
+{
+    "name": "project/sk-driving-school",
+    "description": "Driving school booking and payment website",
+    "authors": [
+        {
+            "name": "Tanvir-Ahmed-Apu",
+            "email": "ahmed010tanvir@gmail.com"
+        }
+    ],
+    "require": {
+        "square/square": "^47.0",
+        "vlucas/phpdotenv": "^5.7",
+        "symfony/http-client": "^8.1",
+        "nyholm/psr7": "^1.8"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    }
+}

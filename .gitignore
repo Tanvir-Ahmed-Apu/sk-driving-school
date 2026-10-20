@@ -1,0 +1,27 @@
+# Ignore all PHP dependencies managed by Composer
+vendor/
+
+# Ignore environment files and config
+.env
+.env.local
+.env.*.local
+
+# Ignore node modules if applicable
+node_modules/
+
+# Ignore IDE files
+.idea/
+.vscode/
+*.suo
+*.ntmpl
+*.user
+
+# Ignore log files
+logs/
+*.log
+
+# Ignore runtime folders
+runtime/
+
+# Ignore Composer lock if you want (though many include it)
+# composer.lock
