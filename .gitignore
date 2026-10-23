@@ -15,6 +15,7 @@ node_modules/
 *.suo
 *.ntmpl
 *.user
+.htaccess
 
 # Ignore log files
 logs/

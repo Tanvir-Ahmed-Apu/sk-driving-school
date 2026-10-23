@@ -1,0 +1,5 @@
+@import "./partials/00-base.css";
+@import "./partials/01-layout.css";
+@import "./partials/02-home.css";
+@import "./partials/03-about-gallery.css";
+@import "./partials/04-responsive.css";
