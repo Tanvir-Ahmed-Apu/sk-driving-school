@@ -4,6 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once 'includes/package-catalog.php';
+require_once 'includes/db.php';
 
 $cart = isset($_SESSION['cart']) && is_array($_SESSION['cart']) ? $_SESSION['cart'] : [];
 $checkoutItems = [];
@@ -22,16 +23,18 @@ foreach ($cart as $itemId => $quantity) {
     }
 
     [$region, $category, $indexValue] = $parts;
-    $packageIndex = ctype_digit($indexValue) ? (int) $indexValue : -1;
+    $productId = ctype_digit($indexValue) ? (int) $indexValue : 0;
     if (
         ($region !== '' && !in_array($region, $regionalServiceAreas, true))
-        || !isset($packagesByCategory[$category][$packageIndex])
+        || !isset($productsById[$productId])
+        || $productsById[$productId]['category'] !== $category
+        || $productsById[$productId]['region'] !== $region
     ) {
         error_log('Unknown package identifier found in the cart while opening checkout.');
         continue;
     }
 
-    $package = $packagesByCategory[$category][$packageIndex];
+    $package = $productsById[$productId];
     $lineTotal = $package['price'] * $quantity;
     $checkoutItems[] = [
         'name' => $package['name'],
@@ -43,6 +46,14 @@ foreach ($cart as $itemId => $quantity) {
     ];
     $basePrice += $lineTotal;
     $cartCount += $quantity;
+}
+
+require_once 'includes/checkout-submit.php';
+
+function checkoutFormValue(string $field): string
+{
+    $value = $_POST[$field] ?? '';
+    return is_string($value) ? htmlspecialchars($value, ENT_QUOTES, 'UTF-8') : '';
 }
 
 require_once 'includes/header.php';
@@ -63,9 +74,9 @@ $certificateDiscount = 30;
         <div class="container">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                 <div>
-                    <span class="checkout-eyebrow"><i class="bi bi-car-front me-2" aria-hidden="true"></i>Road test checkout preview</span>
+                    <span class="checkout-eyebrow"><i class="bi bi-car-front me-2" aria-hidden="true"></i>Secure package checkout</span>
                     <h1 class="h2 fw-bold mt-2 mb-1">Plan your booking</h1>
-                    <p class="text-muted mb-0">Choose your preferences and review estimated pricing before contacting our team.</p>
+                    <p class="text-muted mb-0">Enter your details, review your order, and pay securely through Square.</p>
                 </div>
                 <a class="checkout-help-link" href="tel:+16464000666">
                     <span class="checkout-help-icon"><i class="bi bi-telephone" aria-hidden="true"></i></span>
@@ -77,6 +88,12 @@ $certificateDiscount = 30;
 
     <section class="py-4 py-lg-5">
         <div class="container">
+            <?php if ($checkoutError !== null): ?>
+                <div class="alert alert-danger mb-4" role="alert"><?= htmlspecialchars($checkoutError, ENT_QUOTES, 'UTF-8') ?></div>
+            <?php endif; ?>
+            <form method="post" action="checkout.php" id="checkout-form" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($checkoutCsrfToken, ENT_QUOTES, 'UTF-8') ?>">
+                <input type="hidden" name="checkout_token" value="<?= htmlspecialchars($checkoutSubmissionToken, ENT_QUOTES, 'UTF-8') ?>">
             <div class="row g-4 align-items-start">
                 <div class="col-lg-7 order-2 order-lg-1">
                     <section class="checkout-card p-4 p-md-5 mb-4" aria-labelledby="billing-heading">
@@ -84,50 +101,61 @@ $certificateDiscount = 30;
                             <span class="checkout-section-icon"><i class="bi bi-person-vcard" aria-hidden="true"></i></span>
                             <div>
                                 <h2 class="h4 fw-bold mb-1" id="billing-heading">Billing details</h2>
-                                <p class="text-muted small mb-0">Complete these fields for your reference before contacting us.</p>
+                                <p class="text-muted small mb-0">These details are saved with your order so our team can confirm your service.</p>
                             </div>
-                        </div>
-
-                        <div class="checkout-preview-notice mb-4" role="note">
-                            <i class="bi bi-info-circle" aria-hidden="true"></i>
-                            <p class="mb-0">This checkout is a preview. Information entered here is not sent or saved. To make a booking, use the contact form or call us.</p>
                         </div>
 
                         <div class="row g-3">
                             <div class="col-sm-6">
                                 <label class="form-label fw-semibold" for="billing-first-name">First name</label>
-                                <input type="text" class="form-control" id="billing-first-name" name="first_name" autocomplete="given-name">
+                                <input type="text" class="form-control" id="billing-first-name" name="first_name" maxlength="100" autocomplete="given-name" value="<?= checkoutFormValue('first_name') ?>" required>
                             </div>
                             <div class="col-sm-6">
                                 <label class="form-label fw-semibold" for="billing-last-name">Last name</label>
-                                <input type="text" class="form-control" id="billing-last-name" name="last_name" autocomplete="family-name">
+                                <input type="text" class="form-control" id="billing-last-name" name="last_name" maxlength="100" autocomplete="family-name" value="<?= checkoutFormValue('last_name') ?>" required>
                             </div>
                             <div class="col-12">
                                 <label class="form-label fw-semibold" for="billing-email">Email address</label>
-                                <input type="email" class="form-control" id="billing-email" name="email" autocomplete="email">
+                                <input type="email" class="form-control" id="billing-email" name="email" maxlength="254" autocomplete="email" value="<?= checkoutFormValue('email') ?>" required>
                             </div>
                             <div class="col-12">
                                 <label class="form-label fw-semibold" for="billing-phone">Phone number</label>
-                                <input type="tel" class="form-control" id="billing-phone" name="phone" autocomplete="tel">
+                                <input type="tel" class="form-control" id="billing-phone" name="phone" maxlength="40" autocomplete="tel" value="<?= checkoutFormValue('phone') ?>" required>
                             </div>
                             <div class="col-12">
                                 <label class="form-label fw-semibold" for="billing-address">Street address</label>
-                                <input type="text" class="form-control" id="billing-address" name="address" autocomplete="street-address">
+                                <input type="text" class="form-control" id="billing-address" name="address" maxlength="255" autocomplete="street-address" value="<?= checkoutFormValue('address') ?>" required>
                             </div>
                             <div class="col-sm-7">
                                 <label class="form-label fw-semibold" for="billing-city">City</label>
-                                <input type="text" class="form-control" id="billing-city" name="city" autocomplete="address-level2">
+                                <input type="text" class="form-control" id="billing-city" name="city" maxlength="120" autocomplete="address-level2" value="<?= checkoutFormValue('city') ?>" required>
                             </div>
                             <div class="col-sm-5">
                                 <label class="form-label fw-semibold" for="billing-zip">ZIP code</label>
-                                <input type="text" class="form-control" id="billing-zip" name="postal_code" inputmode="numeric" autocomplete="postal-code">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label fw-semibold" for="permit-id">Learner permit ID number <span class="text-muted fw-normal">(optional)</span></label>
-                                <input type="text" class="form-control" id="permit-id" autocomplete="off" disabled>
-                                <div class="form-text">For your privacy, this preview does not collect permit numbers. We’ll explain what is needed and how to share it securely.</div>
+                                <input type="text" class="form-control" id="billing-zip" name="postal_code" maxlength="20" autocomplete="postal-code" value="<?= checkoutFormValue('postal_code') ?>" required>
                             </div>
                         </div>
+                    </section>
+
+                    <section class="checkout-card p-4 p-md-5 mb-4" aria-labelledby="permit-images-heading">
+                        <div class="checkout-section-heading mb-3">
+                            <span class="checkout-section-icon"><i class="bi bi-card-image" aria-hidden="true"></i></span>
+                            <div>
+                                <h2 class="h4 fw-bold mb-1" id="permit-images-heading">Learner permit photos</h2>
+                                <p class="text-muted small mb-0">Upload clear photos of both sides. Our team uses them to review your paid order.</p>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold" for="permit-front">Front of permit <span class="text-danger">*</span></label>
+                                <input class="form-control" type="file" id="permit-front" name="permit_front" accept="image/jpeg,image/png,image/webp" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold" for="permit-back">Back of permit <span class="text-danger">*</span></label>
+                                <input class="form-control" type="file" id="permit-back" name="permit_back" accept="image/jpeg,image/png,image/webp" required>
+                            </div>
+                        </div>
+                        <p class="form-text mt-3 mb-0">JPEG, PNG, or WebP only; maximum 5 MB per photo. Files are stored outside the public website and are available only to signed-in administrators.</p>
                     </section>
 
                     <section class="checkout-card p-4 p-md-5 mb-4" aria-labelledby="service-heading">
@@ -175,7 +203,7 @@ $certificateDiscount = 30;
                             <legend class="form-label fw-semibold mb-3">Instructor preference <span class="text-muted fw-normal">(optional)</span></legend>
                             <div class="row g-3">
                                 <div class="col-sm-6">
-                                    <input class="btn-check" type="radio" name="instructor" id="instructor-rajandrasinh" value="rajandrasinh">
+                                    <input class="btn-check" type="radio" name="instructor" id="instructor-rajandrasinh" value="rajandrasinh" <?= checkoutFormValue('instructor') === 'rajandrasinh' ? 'checked' : '' ?>>
                                     <label class="checkout-instructor-option" for="instructor-rajandrasinh">
                                         <img src="https://www.skdrivingschoolny.com/images/instructor/Image_Rajandrasinh.jpg" alt="" loading="lazy">
                                         <span class="checkout-instructor-details">
@@ -186,7 +214,7 @@ $certificateDiscount = 30;
                                     </label>
                                 </div>
                                 <div class="col-sm-6">
-                                    <input class="btn-check" type="radio" name="instructor" id="instructor-mohammed" value="mohammed">
+                                    <input class="btn-check" type="radio" name="instructor" id="instructor-mohammed" value="mohammed" <?= checkoutFormValue('instructor') === 'mohammed' ? 'checked' : '' ?>>
                                     <label class="checkout-instructor-option" for="instructor-mohammed">
                                         <img src="https://www.skdrivingschoolny.com/images/instructor/Image_Alam.jpeg" alt="" loading="lazy">
                                         <span class="checkout-instructor-details">
@@ -207,13 +235,13 @@ $certificateDiscount = 30;
                                     <p class="text-muted small mb-0 mt-1">Add this if you still need the NY DMV MV-278 certificate. Bring your learner permit photo ID or DMV state ID and paper learner permit. The usual class time is 11:00 am, Monday–Saturday.</p>
                                     <a href="faq.php" class="small fw-semibold text-decoration-none">Read course FAQs <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
                                 </div>
-                                <input class="form-check-input fs-4 flex-shrink-0 mt-1" type="checkbox" role="switch" id="prelicensing-course" aria-describedby="course-price">
+                                <input class="form-check-input fs-4 flex-shrink-0 mt-1" type="checkbox" role="switch" id="prelicensing-course" name="add_course" value="1" aria-describedby="course-price" <?= checkoutFormValue('add_course') === '1' ? 'checked' : '' ?>>
                             </div>
                             <span class="checkout-addon-price" id="course-price">+$<?= number_format($coursePrice, 2) ?></span>
                         </div>
 
                         <label class="checkout-certificate-option mt-3" for="has-certificate">
-                            <input class="form-check-input mt-1" type="checkbox" id="has-certificate">
+                            <input class="form-check-input mt-1" type="checkbox" id="has-certificate" name="has_certificate" value="1" <?= checkoutFormValue('has_certificate') === '1' ? 'checked' : '' ?>>
                             <span>
                                 <strong>I already have a valid 5-hour course certificate</strong>
                                 <small class="d-block text-muted">Request the $<?= number_format($certificateDiscount, 2) ?> certificate discount. It can’t be combined with purchasing the course above; our team will confirm eligibility.</small>
@@ -232,7 +260,7 @@ $certificateDiscount = 30;
 
                         <div class="mb-4">
                             <label class="form-label fw-semibold" for="road-test-date">Preferred road test date</label>
-                            <input type="date" id="road-test-date" name="road_test_date" class="form-control form-control-lg" min="<?= htmlspecialchars($today, ENT_QUOTES, 'UTF-8') ?>">
+                            <input type="date" id="road-test-date" name="road_test_date" class="form-control form-control-lg" min="<?= htmlspecialchars($today, ENT_QUOTES, 'UTF-8') ?>" value="<?= checkoutFormValue('road_test_date') ?>">
                             <div class="form-text">Choose a future date. Your request is not a confirmed DMV appointment.</div>
                         </div>
 
@@ -240,15 +268,15 @@ $certificateDiscount = 30;
                             <legend class="form-label fw-semibold">Preferred time of day</legend>
                             <div class="row g-2">
                                 <div class="col-4">
-                                    <input type="radio" class="btn-check" name="time" id="morning" value="morning" checked>
+                                    <input type="radio" class="btn-check" name="time" id="morning" value="morning" <?= checkoutFormValue('time') === '' || checkoutFormValue('time') === 'morning' ? 'checked' : '' ?>>
                                     <label class="checkout-time-option" for="morning"><i class="bi bi-sunrise" aria-hidden="true"></i><span>Morning</span><small>7 am–12 pm</small></label>
                                 </div>
                                 <div class="col-4">
-                                    <input type="radio" class="btn-check" name="time" id="afternoon" value="afternoon">
+                                    <input type="radio" class="btn-check" name="time" id="afternoon" value="afternoon" <?= checkoutFormValue('time') === 'afternoon' ? 'checked' : '' ?>>
                                     <label class="checkout-time-option" for="afternoon"><i class="bi bi-sun" aria-hidden="true"></i><span>Afternoon</span><small>12 pm–5 pm</small></label>
                                 </div>
                                 <div class="col-4">
-                                    <input type="radio" class="btn-check" name="time" id="evening" value="evening">
+                                    <input type="radio" class="btn-check" name="time" id="evening" value="evening" <?= checkoutFormValue('time') === 'evening' ? 'checked' : '' ?>>
                                     <label class="checkout-time-option" for="evening"><i class="bi bi-sunset" aria-hidden="true"></i><span>Evening</span><small>5 pm–9 pm</small></label>
                                 </div>
                             </div>
@@ -271,7 +299,7 @@ $certificateDiscount = 30;
                             <div class="row g-3 align-items-end">
                                 <div class="col-sm-7">
                                     <label class="form-label fw-semibold" for="course-date">Preferred class date</label>
-                                    <input type="date" class="form-control" id="course-date" name="course_date" min="<?= htmlspecialchars($today, ENT_QUOTES, 'UTF-8') ?>">
+                                    <input type="date" class="form-control" id="course-date" name="course_date" min="<?= htmlspecialchars($today, ENT_QUOTES, 'UTF-8') ?>" value="<?= checkoutFormValue('course_date') ?>">
                                 </div>
                                 <div class="col-sm-5">
                                     <span class="form-label fw-semibold d-block">Usual class time</span>
@@ -328,49 +356,21 @@ $certificateDiscount = 30;
                         <p class="checkout-summary-disclaimer">Final service pricing may depend on your road test location. We’ll confirm the details before your appointment.</p>
 
                         <div class="checkout-payment-panel mt-4">
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                                <span class="checkout-section-icon"><i class="bi bi-credit-card" aria-hidden="true"></i></span>
-                                <div>
-                                    <h3 class="h6 fw-bold mb-1">Choose a payment preference</h3>
-                                    <p class="small text-muted mb-0">Your selection is not submitted or charged online.</p>
-                                </div>
-                            </div>
-                            <fieldset class="checkout-payment-methods mb-3">
-                                <legend class="visually-hidden">Payment preference</legend>
-                                <div class="row g-2">
-                                    <div class="col-4">
-                                        <input class="btn-check" type="radio" name="payment_method" id="payment-card" value="card" checked>
-                                        <label class="checkout-payment-option" for="payment-card"><i class="bi bi-credit-card" aria-hidden="true"></i><span>Card</span></label>
-                                    </div>
-                                    <div class="col-4">
-                                        <input class="btn-check" type="radio" name="payment_method" id="payment-zelle" value="zelle">
-                                        <label class="checkout-payment-option" for="payment-zelle"><span class="checkout-payment-mark checkout-payment-mark-zelle">Z</span><span>Zelle</span></label>
-                                    </div>
-                                    <div class="col-4">
-                                        <input class="btn-check" type="radio" name="payment_method" id="payment-cash-app" value="cash_app">
-                                        <label class="checkout-payment-option" for="payment-cash-app"><span class="checkout-payment-mark checkout-payment-mark-cash">＄</span><span>Cash App</span></label>
-                                    </div>
-                                </div>
-                            </fieldset>
-                            <div class="checkout-demo-alert" role="status">
-                                <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
-                                <p class="mb-0" id="payment-method-note">Online payments aren’t configured yet. Your card choice is only a preference; no payment will be taken here. Call or text <a href="tel:+16464000666">(646) 400-0666</a> to arrange your booking or ask about payment plans.</p>
-                            </div>
-                            <div id="card-container" class="checkout-card-entry mt-3" aria-label="Card details">
-                                <span class="text-muted small"><i class="bi bi-lock me-2" aria-hidden="true"></i>Card entry will be available when online payments are set up.</span>
+                            <div class="checkout-demo-alert" role="note">
+                                <i class="bi bi-shield-lock-fill" aria-hidden="true"></i>
+                                <p class="mb-0">You’ll continue to Square’s secure hosted checkout to enter payment details. Card data is never collected or stored on this website.</p>
                             </div>
                             <div class="form-check checkout-terms-check mt-3">
-                                <input class="form-check-input" type="checkbox" id="checkout-terms">
+                                <input class="form-check-input" type="checkbox" id="checkout-terms" name="terms" value="1" required <?= checkoutFormValue('terms') === '1' ? 'checked' : '' ?>>
                                 <label class="form-check-label small" for="checkout-terms">
                                     By placing an order, you accept our
                                     <a href="terms-and-condition.php" target="_blank" rel="noopener noreferrer">Terms &amp; Conditions</a>.
                                 </label>
                             </div>
-                            <button type="button" class="btn btn-primary w-100 rounded-pill py-3 mt-3 fw-bold" disabled aria-describedby="payment-setup-note">
-                                <i class="bi bi-lock me-2" aria-hidden="true"></i>Place order unavailable
+                            <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 mt-3 fw-bold" <?= $checkoutItems === [] ? 'disabled' : '' ?>>
+                                Continue to secure payment <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i>
                             </button>
-                            <p class="small text-muted text-center mt-3 mb-0" id="payment-setup-note">Checkout details aren’t saved or sent from this page yet. Secure billing, document upload, and payment processing must be configured before an order can be placed.</p>
-                            <a class="checkout-contact-action" href="contact.php"><i class="bi bi-calendar2-check" aria-hidden="true"></i><span>Request a booking consultation</span><i class="bi bi-arrow-right ms-auto" aria-hidden="true"></i></a>
+                            <p class="small text-muted text-center mt-3 mb-0">Your order is saved as pending and confirmed only after Square verifies payment.</p>
                         </div>
 
                         <div class="checkout-trust-row">
@@ -386,6 +386,7 @@ $certificateDiscount = 30;
                         <p class="small text-muted mb-0">Free pickup and drop-off may be available within a 10-minute drive of our office. <a href="contact.php" class="fw-semibold text-decoration-none">Ask us about your location.</a></p>
                     </aside>
                 </div>
+                </form>
             </div>
         </div>
     </section>
@@ -401,8 +402,6 @@ $certificateDiscount = 30;
     const certificateDiscountRow = document.getElementById('certificate-discount-row');
     const courseSchedule = document.getElementById('course-schedule');
     const courseDate = document.getElementById('course-date');
-    const paymentMethodNote = document.getElementById('payment-method-note');
-    const cardContainer = document.getElementById('card-container');
     const courseDateNote = document.getElementById('course-date-note');
 
     const updateCheckoutTotal = () => {
@@ -442,14 +441,6 @@ $certificateDiscount = 30;
         updateCheckoutTotal();
     });
 
-    document.querySelectorAll('input[name="payment_method"]').forEach((paymentMethod) => {
-        paymentMethod.addEventListener('change', () => {
-            const methodNames = { card: 'card', zelle: 'Zelle', cash_app: 'Cash App' };
-            paymentMethodNote.firstChild.textContent = `Online payments aren’t configured yet. Your ${methodNames[paymentMethod.value]} choice is only a preference; no payment will be taken here. Call or text `;
-            cardContainer.hidden = paymentMethod.value !== 'card';
-        });
-    });
-
     document.querySelectorAll('input[name="instructor"]').forEach((instructor) => {
         instructor.addEventListener('change', () => {
             document.querySelectorAll('.checkout-instructor-select span:last-child').forEach((label) => {
@@ -470,6 +461,17 @@ $certificateDiscount = 30;
         courseDateNote.textContent = isSunday
             ? 'Sunday classes are not part of the usual schedule. Please choose another day or contact us to ask.'
             : 'Preference noted. Our team will confirm the date and seat availability.';
+    });
+
+    updateCheckoutTotal();
+    document.getElementById('checkout-form').addEventListener('submit', (event) => {
+        if (!event.currentTarget.reportValidity()) {
+            event.preventDefault();
+            return;
+        }
+        const submitButton = event.currentTarget.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Preparing secure checkout…';
     });
 </script>
 

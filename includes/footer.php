@@ -45,6 +45,23 @@
                     </a>
                     <p class="footer-hours"><i class="bi bi-clock me-2" aria-hidden="true"></i>Mon–Sat: 7 am–10 pm <span aria-hidden="true">·</span> Sun: 10 am–5 pm</p>
                     <a class="footer-cta" href="packages.php">Find your driving package <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                    <?php
+                    if (!isset($_SESSION['newsletter_csrf']) || !is_string($_SESSION['newsletter_csrf'])) {
+                        $_SESSION['newsletter_csrf'] = bin2hex(random_bytes(32));
+                    }
+                    ?>
+                    <form class="admin-newsletter-form mt-4" method="post" action="newsletter-subscribe.php">
+                        <label for="footer-newsletter-email">Driving tips &amp; updates</label>
+                        <div class="input-group mt-2">
+                            <input class="form-control" type="email" id="footer-newsletter-email" name="email" autocomplete="email" placeholder="Your email address" required>
+                            <button class="btn btn-primary" type="submit" aria-label="Subscribe to newsletter"><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+                        </div>
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['newsletter_csrf'], ENT_QUOTES, 'UTF-8') ?>">
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="newsletter-consent" name="consent" value="1" required>
+                            <label class="form-check-label" for="newsletter-consent">I agree to receive occasional school news and driving tips.</label>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

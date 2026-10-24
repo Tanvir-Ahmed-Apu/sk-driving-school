@@ -73,17 +73,19 @@ foreach ($cart as $itemId => $quantity) {
     }
 
     [$region, $category, $indexValue] = $parts;
-    $packageIndex = ctype_digit($indexValue) ? (int) $indexValue : -1;
+    $productId = ctype_digit($indexValue) ? (int) $indexValue : 0;
     if (
         ($region !== '' && !in_array($region, $regionalServiceAreas, true))
-        || !isset($packagesByCategory[$category][$packageIndex])
+        || !isset($productsById[$productId])
+        || $productsById[$productId]['category'] !== $category
+        || $productsById[$productId]['region'] !== $region
     ) {
         error_log('Unknown package identifier found in the shopping cart session.');
         $cartError = 'A cart item could not be displayed. Please remove it or clear your cart and try again.';
         continue;
     }
 
-    $package = $packagesByCategory[$category][$packageIndex];
+    $package = $productsById[$productId];
     $lineTotal = $package['price'] * $quantity;
     $cartLines[] = [
         'id' => $itemId,

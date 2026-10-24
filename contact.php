@@ -28,12 +28,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     } elseif ($pdo !== null) {
         try {
             $stmt = $pdo->prepare(
-                'INSERT INTO CONTACT_MESSAGE (name, email, subject, message) VALUES (?, ?, ?, ?)'
+                'INSERT INTO contact_messages (name, phone, email, subject, message) VALUES (?, ?, ?, ?, ?)'
             );
             $stmt->execute([
                 $formValues['name'],
+                $formValues['phone'],
                 $formValues['email'],
-                'Consultation request - ' . $formValues['phone'],
+                'Consultation request',
                 $formValues['message'],
             ]);
             $messageSent = true;
