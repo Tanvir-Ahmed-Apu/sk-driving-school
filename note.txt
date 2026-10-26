@@ -1,4 +1,0 @@
-.htaccess used for routing
-bootstraps offline
-social media icon - original logo
-homepage - header bussiness time 

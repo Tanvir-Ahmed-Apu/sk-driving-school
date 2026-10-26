@@ -996,18 +996,53 @@
     color: inherit;
     text-decoration: none;
 }
-.topbar-social a {
+.topbar-social {
+    gap: 0.5rem;
+}
+.topbar-social-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 42px;
-    min-height: 20px;
-    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: 1rem;
+    line-height: 1;
 }
-.topbar-social a:first-child {
-    border-left: 1px solid rgba(255, 255, 255, 0.2);
+
+.topbar-social {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
-.topbar-info a,
+
+.topbar-social a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  text-decoration: none;
+  transition: transform 0.2s ease;
+}
+
+.topbar-social a:hover {
+  transform: translateY(-2px);
+}
+
+.topbar-social i {
+    font-size: 20px; /* Adjust to fit 40px box */
+    color: inherit;
+}
+
+.instagram-color{
+  background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .topbar-info span {
     white-space: nowrap;
 }
@@ -1046,12 +1081,6 @@
     }
     .topbar-social {
         border-bottom: 1px solid #e5e5e5;
-    }
-    .topbar-social a {
-        border-color: #e5e5e5;
-    }
-    .topbar-social a:first-child {
-        border-left-color: #e5e5e5;
     }
     .topbar-info {
         align-items: stretch !important;
@@ -1137,7 +1166,6 @@ main {
 
 .btn,
 .navbar .nav-link,
-.topbar-social a,
 .footer-links a,
 .footer-contact-link,
 .footer-bottom-link,
@@ -1175,10 +1203,6 @@ main {
 .navbar .nav-link.active::after,
 .navbar .nav-link[aria-current="page"]::after {
     transform: scaleX(1);
-}
-
-.topbar-social a {
-    transition: background-color 0.18s ease, color 0.18s ease;
 }
 
 .home-feature-card,
@@ -1252,10 +1276,6 @@ main {
         transform: scaleX(1);
     }
 
-    .topbar-social a:hover {
-        background: rgba(255, 255, 255, 0.12);
-    }
-
     .home-feature-card:hover,
     .home-package-card:hover,
     .card:hover,
@@ -1308,4 +1328,3 @@ main {
         transition-duration: 0.01ms !important;
     }
 }
-

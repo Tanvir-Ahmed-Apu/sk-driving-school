@@ -32,6 +32,8 @@ $pageTitle = $pageTitle ?? 'SK Driving School - Drive Smart';
         rel="stylesheet"
     >
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
