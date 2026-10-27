@@ -10,7 +10,7 @@
     "require": {
         "square/square": "^47.0",
         "vlucas/phpdotenv": "^5.7",
-        "symfony/http-client": "^8.1",
+        "symfony/http-client": "^7.4",
         "nyholm/psr7": "^1.8"
     },
     "config": {
