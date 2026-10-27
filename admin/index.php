@@ -164,18 +164,6 @@ require __DIR__ . '/_header.php';
         <strong>$<?= number_format(((int) ($totals['total_sales_cents'] ?? 0)) / 100, 2) ?></strong>
         <small><?= number_format((int) ($totals['paid_orders'] ?? 0)) ?> completed payments</small>
     </article>
-    <article class="admin-stat-card">
-        <span class="admin-stat-icon icon-purple"><i class="bi bi-chat-left-text"></i></span>
-        <span class="admin-stat-label">Contact requests</span>
-        <strong><?= number_format($contactCount) ?></strong>
-        <small>Messages received</small>
-    </article>
-    <article class="admin-stat-card">
-        <span class="admin-stat-icon icon-orange"><i class="bi bi-envelope-check"></i></span>
-        <span class="admin-stat-label">Newsletter subscribers</span>
-        <strong><?= number_format($newsletterCount) ?></strong>
-        <small>Currently subscribed</small>
-    </article>
 </section>
 
 <section class="admin-chart-grid" aria-label="Sales charts">
