@@ -177,12 +177,14 @@ require __DIR__ . '/_header.php';
         </div>
         <div class="admin-chart-plot admin-month-chart" role="img" aria-label="Monthly paid sales over the last 12 months">
             <?php foreach ($monthlyChart as $month): ?>
-                <?php $height = $month['sales_cents'] > 0 ? max(4, (int) round(($month['sales_cents'] / $monthlyMax) * 100)) : 0; ?>
-                <div class="admin-chart-column" title="<?= adminEscape($month['full_label']) ?>: $<?= number_format($month['sales_cents'] / 100, 2) ?>">
-                    <?php if ($month['sales_cents'] > 0): ?>
-                        <span class="admin-chart-value">$<?= number_format($month['sales_cents'] / 100, 0) ?></span>
-                    <?php endif; ?>
-                    <span class="admin-chart-bar <?= $month['is_current'] ? 'current' : '' ?>" style="--bar-height: <?= $height ?>%"></span>
+                <?php $height = $month['sales_cents'] > 0 ? max(4, (int) round(($month['sales_cents'] / $monthlyMax) * 82)) : 0; ?>
+                <div class="admin-chart-column" aria-label="<?= adminEscape($month['full_label']) ?>: $<?= number_format($month['sales_cents'] / 100, 2) ?>">
+                    <span class="admin-month-chart-track">
+                        <?php if ($month['sales_cents'] > 0): ?>
+                            <span class="admin-chart-value">$<?= number_format($month['sales_cents'] / 100, 0) ?></span>
+                        <?php endif; ?>
+                        <span class="admin-chart-bar <?= $month['is_current'] ? 'current' : '' ?>" style="--bar-height: <?= $height ?>%"></span>
+                    </span>
                     <span class="admin-chart-label"><?= adminEscape($month['label']) ?></span>
                 </div>
             <?php endforeach; ?>

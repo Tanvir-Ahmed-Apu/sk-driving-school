@@ -307,11 +307,46 @@ body.admin-login-page {
 
 .admin-chart-value {
     position: absolute;
+    z-index: 1;
     bottom: calc(var(--bar-height) + 2.15rem);
     color: #536174;
     font-size: 0.65rem;
     font-weight: 650;
     white-space: nowrap;
+}
+
+.admin-month-chart .admin-chart-column {
+    padding-bottom: 0;
+}
+
+.admin-month-chart-track {
+    display: block;
+    position: relative;
+    width: 100%;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.admin-month-chart-track .admin-chart-bar {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    height: var(--bar-height);
+    max-height: 100%;
+    transform: translateX(-50%);
+}
+
+.admin-month-chart-track .admin-chart-value {
+    z-index: 2;
+    bottom: calc(var(--bar-height) + 0.5rem);
+    padding: 0.1rem 0.25rem;
+    border-radius: 0.25rem;
+    background: #fff;
+    color: var(--admin-ink);
+}
+
+.admin-month-chart .admin-chart-column:hover .admin-chart-bar {
+    transform: translateX(-50%) scaleX(1.1);
 }
 
 .admin-daily-chart {

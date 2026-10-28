@@ -59,7 +59,7 @@ function checkoutFormValue(string $field): string
 
 require_once 'includes/header.php';
 
-$today = date('Y-m-d');
+$minimumRoadTestDate = checkoutMinimumRoadTestDate();
 $squareService = squarePaymentService();
 $squareApplicationId = $squareService->getApplicationId();
 $squareLocationId = $squareService->getLocationId();
@@ -231,8 +231,8 @@ $squareSdkUrl = $squareEnvironment === 'production'
 
                         <div class="mb-4">
                             <label class="form-label fw-semibold" for="road-test-date">Preferred road test date</label>
-                            <input type="date" id="road-test-date" name="road_test_date" class="form-control form-control-lg" min="<?= htmlspecialchars($today, ENT_QUOTES, 'UTF-8') ?>" value="<?= checkoutFormValue('road_test_date') ?>">
-                            <div class="form-text">Choose a future date. Your request is not a confirmed DMV appointment.</div>
+                            <input type="date" id="road-test-date" name="road_test_date" class="form-control form-control-lg" min="<?= htmlspecialchars($minimumRoadTestDate, ENT_QUOTES, 'UTF-8') ?>" value="<?= checkoutFormValue('road_test_date') ?>">
+                            <div class="form-text">Choose a future date (New York time). Your request is not a confirmed DMV appointment.</div>
                         </div>
 
                         <div class="mb-4">

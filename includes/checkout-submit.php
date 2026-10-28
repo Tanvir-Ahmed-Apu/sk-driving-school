@@ -27,6 +27,13 @@ function checkoutPostString(string $key): string
     return isset($_POST[$key]) && is_string($_POST[$key]) ? trim($_POST[$key]) : '';
 }
 
+function checkoutMinimumRoadTestDate(): string
+{
+    $schoolTimezone = new DateTimeZone('America/New_York');
+
+    return (new DateTimeImmutable('tomorrow', $schoolTimezone))->format('Y-m-d');
+}
+
 function checkoutOptionalDate(string $value): string|false|null
 {
     if ($value === '') {
@@ -38,7 +45,7 @@ function checkoutOptionalDate(string $value): string|false|null
         $date === false
         || ($errors !== false && ($errors['warning_count'] > 0 || $errors['error_count'] > 0))
         || $date->format('Y-m-d') !== $value
-        || $date->format('Y-m-d') < date('Y-m-d')
+        || $date->format('Y-m-d') < checkoutMinimumRoadTestDate()
     ) {
         return false;
     }
