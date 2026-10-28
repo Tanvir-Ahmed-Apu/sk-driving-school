@@ -18,12 +18,14 @@ use Square\Exceptions\SquareException;
 use Square\Payments\Requests\CreatePaymentRequest;
 use Square\Types\CashPaymentDetails;
 use Square\Types\Currency;
+use Square\Types\CreatePaymentResponse;
 use Square\Types\Money;
 use Square\Utils\WebhooksHelper;
 use Square\Reporting\Requests\LoadRequest;
 use Square\Types\Query;
 use Square\Utils\ReportingHelper;
 use PDO;
+use RuntimeException;
 
 /**
  * Service class for Square payment operations.

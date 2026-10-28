@@ -107,7 +107,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         ];
         if (is_array($existingOrder)) {
             http_response_code(409);
-            $checkoutError = 'Order ' . $existingOrder['order_number'] . ' was already saved, but Square did not confirm its payment. Contact the school before trying again.';
+            $checkoutError = 'Order ' . $existingOrder['order_number'] . ' was already saved, but its payment status is not confirmed.';
         } elseif (
             in_array('', $customer, true)
             || !filter_var($customer['email'], FILTER_VALIDATE_EMAIL)
