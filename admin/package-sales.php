@@ -50,6 +50,21 @@ $statement = $pdo->prepare(
 );
 $statement->execute($parameters);
 $orders = $statement->fetchAll();
+$itemsByOrder = [];
+if ($orders !== []) {
+    $orderIds = array_map(static fn (array $order): int => (int) $order['id'], $orders);
+    $placeholders = implode(',', array_fill(0, count($orderIds), '?'));
+    $itemsStatement = $pdo->prepare(
+        "SELECT order_id, item_name, category, region, quantity
+         FROM order_items
+         WHERE order_id IN ($placeholders)
+         ORDER BY order_id, id"
+    );
+    $itemsStatement->execute($orderIds);
+    foreach ($itemsStatement->fetchAll() as $item) {
+        $itemsByOrder[(int) $item['order_id']][] = $item;
+    }
+}
 
 $adminPageTitle = 'Package sales';
 require __DIR__ . '/_header.php';
@@ -71,12 +86,12 @@ require __DIR__ . '/_header.php';
             <thead>
                 <tr>
                     <th>SL</th><th>Invoice no.</th><th>Student name</th><th>Number</th><th>Status</th>
-                    <th>Address</th><th>Preferred schedule</th><th>Images</th><th>Amount</th><th>Voucher</th>
+                    <th>Address</th><th>Preferred schedule</th><th>Images</th><th>Amount</th><th>Voucher</th><th>Action</th>
                 </tr>
             </thead>
             <tbody>
             <?php if ($orders === []): ?>
-                <tr><td class="text-center py-5 text-secondary" colspan="10">No paid package orders found.</td></tr>
+                <tr><td class="text-center py-5 text-secondary" colspan="11">No paid package orders found.</td></tr>
             <?php else: foreach ($orders as $index => $order): ?>
                 <tr>
                     <td><?= $index + 1 ?></td>
@@ -112,11 +127,25 @@ require __DIR__ . '/_header.php';
                             —
                         <?php endif; ?>
                     </td>
+                    <td>
+                        <?php if (!empty($itemsByOrder[(int) $order['id']])): ?>
+                            <?php foreach ($itemsByOrder[(int) $order['id']] as $item): ?>
+                                <small>
+                                    <?= adminEscape($item['item_name']) ?> × <?= (int) $item['quantity'] ?>
+                                    <?php if ($item['region'] !== null && $item['region'] !== ''): ?>
+                                        · <?= adminEscape($item['region']) ?>
+                                    <?php endif; ?>
+                                </small>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <span class="text-secondary small">No package details</span>
+                        <?php endif; ?>
+                    </td>
                 </tr>
             <?php endforeach; endif; ?>
             </tbody>
         </table>
     </div>
-    <p class="admin-table-note mb-0">Showing up to 100 most recent paid orders. Voucher displays the certificate discount recorded at checkout; permit images are available only to signed-in administrators.</p>
+    <p class="admin-table-note mb-0">Showing up to 100 most recent paid orders. Action lists the purchased packages and quantities; permit images are available only to signed-in administrators.</p>
 </section>
 <?php require __DIR__ . '/_footer.php'; ?>

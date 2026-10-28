@@ -1,7 +1,6 @@
 <?php
 
 require_once __DIR__ . '/square.php';
-require_once __DIR__ . '/permit-documents.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
@@ -15,7 +14,13 @@ if (!isset($_SESSION['checkout_submission_token']) || !is_string($_SESSION['chec
 }
 $checkoutCsrfToken = $_SESSION['checkout_csrf'];
 $checkoutSubmissionToken = $_SESSION['checkout_submission_token'];
+$checkoutPaymentAttemptId = $_POST['payment_attempt_id'] ?? '';
+if (!is_string($checkoutPaymentAttemptId) || preg_match('/\A[a-f0-9]{32}\z/', $checkoutPaymentAttemptId) !== 1) {
+    $checkoutPaymentAttemptId = bin2hex(random_bytes(16));
+}
 $checkoutError = null;
+$checkoutCardToken = $_POST['square_card_token'] ?? '';
+$existingOrder = null;
 
 function checkoutPostString(string $key): string
 {
@@ -49,6 +54,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     } elseif (!hash_equals($checkoutSubmissionToken, checkoutPostString('checkout_token'))) {
         http_response_code(409);
         $checkoutError = 'This checkout form has already been submitted. Refresh the page to begin a new order.';
+    } elseif (!is_string($checkoutCardToken) || $checkoutCardToken === '' || strlen($checkoutCardToken) > 2048) {
+        http_response_code(422);
+        $checkoutError = 'Enter your card details and wait for Square to verify them before placing your order.';
     } elseif ($pdo === null) {
         http_response_code(503);
         $checkoutError = 'Checkout is temporarily unavailable because the order database is not connected.';
@@ -57,12 +65,27 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         $checkoutError = 'Your cart is empty. Add a package before checkout.';
     } else {
         $existingOrderStatement = $pdo->prepare(
-            'SELECT order_number, square_payment_url FROM orders WHERE checkout_token = ? LIMIT 1'
+            'SELECT id, order_number, public_token, customer_email, total_cents,
+                    payment_status, square_payment_id, square_payment_url
+             FROM orders WHERE checkout_token = ? LIMIT 1'
         );
         $existingOrderStatement->execute([$checkoutSubmissionToken]);
         $existingOrder = $existingOrderStatement->fetch();
         if (is_array($existingOrder) && is_string($existingOrder['square_payment_url']) && $existingOrder['square_payment_url'] !== '') {
             header('Location: ' . $existingOrder['square_payment_url'], true, 303);
+            exit;
+        }
+        if (
+            is_array($existingOrder)
+            && (
+                $existingOrder['payment_status'] === 'paid'
+                || (
+                    $existingOrder['payment_status'] === 'pending'
+                    && $existingOrder['square_payment_id'] !== null
+                )
+            )
+        ) {
+            header('Location: order-confirmation.php?ref=' . rawurlencode($existingOrder['public_token']), true, 303);
             exit;
         }
         $customer = [
@@ -75,31 +98,16 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             'postal_code' => checkoutPostString('postal_code'),
         ];
         $roadTestDate = checkoutOptionalDate(checkoutPostString('road_test_date'));
-        $courseDate = checkoutOptionalDate(checkoutPostString('course_date'));
         $timePreference = checkoutPostString('time');
-        $allowedTimes = ['morning', 'afternoon', 'evening'];
+        $allowedTimes = ['11:00 AM'];
         $instructor = checkoutPostString('instructor');
         $allowedInstructors = [
             'rajandrasinh' => 'RAJANDRASINH, B CHAVDA',
             'mohammed' => 'MOHAMMED, M ALAM',
         ];
-        $addCourse = checkoutPostString('add_course') === '1';
-        $requestCertificateDiscount = checkoutPostString('has_certificate') === '1';
-        $certificateDiscountCents = $requestCertificateDiscount && !$addCourse ? 3000 : 0;
-
-        $permitUploads = [];
-        $permitUploadError = null;
-        if (!is_array($existingOrder)) {
-            try {
-                $permitUploads = validatePermitImageUploads($_FILES);
-            } catch (RuntimeException $e) {
-                $permitUploadError = $e->getMessage();
-            }
-        }
-
         if (is_array($existingOrder)) {
             http_response_code(409);
-            $checkoutError = 'Order ' . $existingOrder['order_number'] . ' was saved, but secure payment could not be started. Contact the school for help instead of submitting another order.';
+            $checkoutError = 'Order ' . $existingOrder['order_number'] . ' was already saved, but Square did not confirm its payment. Contact the school before trying again.';
         } elseif (
             in_array('', $customer, true)
             || !filter_var($customer['email'], FILTER_VALIDATE_EMAIL)
@@ -111,14 +119,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             || strlen($customer['city']) > 120
             || strlen($customer['postal_code']) > 20
             || $roadTestDate === false
-            || ($addCourse && $courseDate === false)
             || !in_array($timePreference, $allowedTimes, true)
             || ($instructor !== '' && !isset($allowedInstructors[$instructor]))
             || checkoutPostString('terms') !== '1'
-            || $permitUploadError !== null
         ) {
             http_response_code(422);
-            $checkoutError = $permitUploadError ?? 'Please check your required contact details, address, and date selections.';
+            $checkoutError = 'Please check your required contact details, address, and date selections.';
         } else {
             $subtotalCents = 0;
             $orderItems = [];
@@ -135,172 +141,162 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     'line_total_cents' => $lineTotalCents,
                 ];
             }
-            if ($addCourse) {
-                $subtotalCents += 5000;
-                $orderItems[] = [
-                    'name' => '5-Hour Pre-Licensing Course',
-                    'category' => 'Course',
-                    'region' => '',
-                    'quantity' => 1,
-                    'unit_price_cents' => 5000,
-                    'line_total_cents' => 5000,
-                ];
-            }
-            $totalCents = max(0, $subtotalCents - $certificateDiscountCents);
+            $totalCents = $subtotalCents;
             if ($totalCents < 100) {
                 http_response_code(422);
                 $checkoutError = 'The order total is below the minimum Square checkout amount.';
+            } elseif (
+                appEnv('SQUARE_APPLICATION_ID') === ''
+                || appEnv('SQUARE_ACCESS_TOKEN') === ''
+                || appEnv('SQUARE_LOCATION_ID') === ''
+                || !in_array(appEnv('SQUARE_ENVIRONMENT', 'sandbox'), ['sandbox', 'production'], true)
+            ) {
+                http_response_code(503);
+                $checkoutError = 'Card payments are temporarily unavailable. Contact the school for help.';
             } else {
-                $orderNumber = 'SK' . date('ymd') . strtoupper(bin2hex(random_bytes(3)));
-                $publicToken = bin2hex(random_bytes(32));
-                $storedPermitUploads = [];
                 try {
-                    $storedPermitUploads = storePermitImageUploads($permitUploads);
-                } catch (RuntimeException $e) {
-                    http_response_code(503);
-                    $checkoutError = $e->getMessage();
-                }
-
-                if ($checkoutError === null) {
-                    try {
-                        $pdo->beginTransaction();
-                        $insertOrder = $pdo->prepare(
-                            'INSERT INTO orders (
-                                order_number, public_token, checkout_token, customer_first_name, customer_last_name,
-                                customer_email, customer_phone, address, city, postal_code,
-                                preferred_date, preferred_time, instructor_preference, course_date,
-                                subtotal_cents, discount_cents, total_cents, terms_accepted_at,
-                                order_status, payment_status
-                             ) VALUES (
-                                :order_number, :public_token, :checkout_token, :first_name, :last_name,
-                                :email, :phone, :address, :city, :postal_code,
-                                :preferred_date, :preferred_time, :instructor, :course_date,
-                                :subtotal, :discount, :total, CURRENT_TIMESTAMP, :order_status, :payment_status
-                             )'
-                        );
-                        $insertOrder->execute([
-                            'order_number' => $orderNumber,
-                            'public_token' => $publicToken,
-                            'checkout_token' => $checkoutSubmissionToken,
-                            'first_name' => $customer['first_name'],
-                            'last_name' => $customer['last_name'],
-                            'email' => $customer['email'],
-                            'phone' => $customer['phone'],
-                            'address' => $customer['address'],
-                            'city' => $customer['city'],
-                            'postal_code' => $customer['postal_code'],
-                            'preferred_date' => $roadTestDate,
-                            'preferred_time' => $timePreference,
-                            'instructor' => $allowedInstructors[$instructor] ?? null,
-                            'course_date' => $addCourse ? $courseDate : null,
-                            'subtotal' => $subtotalCents,
-                            'discount' => $certificateDiscountCents,
-                            'total' => $totalCents,
-                            'order_status' => 'awaiting_payment',
-                            'payment_status' => 'pending',
-                        ]);
-                        $orderId = (int) $pdo->lastInsertId();
-                        $insertItem = $pdo->prepare(
-                            'INSERT INTO order_items (
-                                order_id, item_name, category, region, quantity, unit_price_cents, line_total_cents
-                             ) VALUES (?, ?, ?, ?, ?, ?, ?)'
-                        );
-                        foreach ($orderItems as $item) {
-                            $insertItem->execute([
-                                $orderId,
-                                $item['name'],
-                                $item['category'],
-                                $item['region'],
-                                $item['quantity'],
-                                $item['unit_price_cents'],
-                                $item['line_total_cents'],
-                            ]);
-                        }
-                        $insertDocument = $pdo->prepare(
-                            'INSERT INTO order_documents (order_id, document_side, storage_key, mime_type) VALUES (?, ?, ?, ?)'
-                        );
-                        foreach ($storedPermitUploads as $side => $upload) {
-                            $insertDocument->execute([
-                                $orderId,
-                                $side,
-                                $upload['storage_key'],
-                                $upload['mime_type'],
-                            ]);
-                        }
-                        $pdo->commit();
-                    } catch (PDOException $e) {
-                        if ($pdo->inTransaction()) {
-                            $pdo->rollBack();
-                        }
-                        deletePermitImageFiles(array_column($storedPermitUploads, 'storage_key'));
-                        error_log('Could not save checkout order: ' . $e->getMessage());
-                        http_response_code(503);
-                        $checkoutError = 'We could not save your order. Please try again or contact the school.';
-                    }
-                }
-
-                if ($checkoutError === null) {
-                    try {
-                        $locationId = appEnv('SQUARE_LOCATION_ID');
-                        $appBaseUrl = rtrim(appEnv('APP_BASE_URL'), '/');
-                        if ($locationId === '' || $appBaseUrl === '' || !in_array(parse_url($appBaseUrl, PHP_URL_SCHEME), ['http', 'https'], true)) {
-                            throw new RuntimeException('Square location ID or public application URL is not configured.');
-                        }
-
-                        $client = squareClient();
-                        $request = new Square\Checkout\PaymentLinks\Requests\CreatePaymentLinkRequest([
-                            'idempotencyKey' => substr(hash('sha256', $checkoutSubmissionToken), 0, 32),
-                            'description' => 'SK Driving School order ' . $orderNumber,
-                            'quickPay' => new Square\Types\QuickPay([
-                                'name' => 'SK Driving School order ' . $orderNumber,
-                                'priceMoney' => new Square\Types\Money([
-                                    'amount' => $totalCents,
-                                    'currency' => 'USD',
-                                ]),
-                                'locationId' => $locationId,
-                            ]),
-                            'checkoutOptions' => new Square\Types\CheckoutOptions([
-                                'redirectUrl' => $appBaseUrl . '/order-confirmation.php?ref=' . $publicToken,
-                                'askForShippingAddress' => false,
-                                'allowTipping' => false,
-                            ]),
-                            'paymentNote' => 'SK Driving School order ' . $orderNumber,
-                        ]);
-                        $response = $client->checkout->paymentLinks->create($request);
-                        $paymentLink = $response->getPaymentLink();
-                        if (
-                            $paymentLink === null
-                            || !is_string($paymentLink->getUrl())
-                            || $paymentLink->getUrl() === ''
-                            || !is_string($paymentLink->getOrderId())
-                            || $paymentLink->getOrderId() === ''
-                        ) {
-                            throw new RuntimeException('Square did not return a usable payment link and order ID.');
-                        }
-                        $pdo->prepare(
-                            "UPDATE orders
-                             SET square_order_id = ?, square_payment_link_id = ?, square_payment_url = ?
-                             WHERE id = ?"
-                        )->execute([
-                            $paymentLink->getOrderId(),
-                            $paymentLink->getId(),
-                            $paymentLink->getUrl(),
+                    $pdo->beginTransaction();
+                    $orderNumber = 'SK' . date('ymd') . strtoupper(bin2hex(random_bytes(3)));
+                    $publicToken = bin2hex(random_bytes(32));
+                    $insertOrder = $pdo->prepare(
+                        'INSERT INTO orders (
+                            order_number, public_token, checkout_token, customer_first_name, customer_last_name,
+                            customer_email, customer_phone, address, city, postal_code,
+                            preferred_date, preferred_time, instructor_preference,
+                            subtotal_cents, total_cents, terms_accepted_at,
+                            order_status, payment_status
+                         ) VALUES (
+                             :order_number, :public_token, :checkout_token, :first_name, :last_name,
+                             :email, :phone, :address, :city, :postal_code,
+                             :preferred_date, :preferred_time, :instructor,
+                             :subtotal, :total, CURRENT_TIMESTAMP, :order_status, :payment_status
+                        )'
+                    );
+                    $insertOrder->execute([
+                        'order_number' => $orderNumber,
+                        'public_token' => $publicToken,
+                        'checkout_token' => $checkoutSubmissionToken,
+                        'first_name' => $customer['first_name'],
+                        'last_name' => $customer['last_name'],
+                        'email' => $customer['email'],
+                        'phone' => $customer['phone'],
+                        'address' => $customer['address'],
+                        'city' => $customer['city'],
+                        'postal_code' => $customer['postal_code'],
+                        'preferred_date' => $roadTestDate,
+                        'preferred_time' => $timePreference,
+                        'instructor' => $allowedInstructors[$instructor] ?? null,
+                        'subtotal' => $subtotalCents,
+                        'total' => $totalCents,
+                        'order_status' => 'awaiting_payment',
+                        'payment_status' => 'pending',
+                    ]);
+                    $orderId = (int) $pdo->lastInsertId();
+                    $insertItem = $pdo->prepare(
+                        'INSERT INTO order_items (
+                            order_id, item_name, category, region, quantity, unit_price_cents, line_total_cents
+                         ) VALUES (?, ?, ?, ?, ?, ?, ?)'
+                    );
+                    foreach ($orderItems as $item) {
+                        $insertItem->execute([
                             $orderId,
+                            $item['name'],
+                            $item['category'],
+                            $item['region'],
+                            $item['quantity'],
+                            $item['unit_price_cents'],
+                            $item['line_total_cents'],
                         ]);
-                        $_SESSION['cart'] = [];
-                        $_SESSION['checkout_submission_token'] = bin2hex(random_bytes(32));
-                        header('Location: ' . $paymentLink->getUrl(), true, 303);
-                        exit;
+                    }
+                    $pdo->commit();
+                } catch (PDOException $e) {
+                    if ($pdo->inTransaction()) {
+                        $pdo->rollBack();
+                    }
+                    error_log('Could not save checkout order: ' . $e->getMessage());
+                    http_response_code(503);
+                    $checkoutError = 'We could not save your order. Please try again or contact the school.';
+                }
+
+                if ($checkoutError === null) {
+                    try {
+                        $service = squarePaymentService();
+                        $paymentResponse = $service->createPayment(
+                            totalCents: $totalCents,
+                            cardToken: $checkoutCardToken,
+                            orderNumber: $orderNumber,
+                            customerEmail: $customer['email']
+                        );
+                        $payment = $paymentResponse->getPayment();
+
+                        if ($payment === null || !is_string($payment->getId()) || $payment->getId() === '') {
+                            $pdo->prepare(
+                                "UPDATE orders SET payment_status = 'failed' WHERE id = ? AND payment_status = 'pending'"
+                            )->execute([$orderId]);
+                            $_SESSION['checkout_submission_token'] = bin2hex(random_bytes(32));
+                            $checkoutSubmissionToken = $_SESSION['checkout_submission_token'];
+                            $checkoutPaymentAttemptId = bin2hex(random_bytes(16));
+                            http_response_code(402);
+                            $checkoutError = 'Square could not process this card. Check the details or try another card.';
+                        } elseif (in_array($payment->getStatus(), ['FAILED', 'CANCELED'], true)) {
+                            $pdo->prepare(
+                                "UPDATE orders SET payment_status = 'failed' WHERE id = ? AND payment_status = 'pending'"
+                            )->execute([$orderId]);
+                            $_SESSION['checkout_submission_token'] = bin2hex(random_bytes(32));
+                            $checkoutSubmissionToken = $_SESSION['checkout_submission_token'];
+                            $checkoutPaymentAttemptId = bin2hex(random_bytes(16));
+                            http_response_code(402);
+                            $checkoutError = 'Your card was not charged. Check the details or try another card.';
+                        } elseif (!in_array($payment->getStatus(), ['COMPLETED', 'APPROVED'], true)) {
+                            throw new RuntimeException('Square returned an unexpected card payment status.');
+                        } else {
+                            $paymentId = $payment->getId();
+                            $paymentCompleted = $payment->getStatus() === 'COMPLETED';
+                            $finalPaymentStatus = $paymentCompleted ? 'paid' : 'pending';
+
+                            $updatePayment = $pdo->prepare(
+                                "UPDATE orders
+                                 SET square_payment_id = ?,
+                                     payment_status = ?,
+                                     paid_at = IF(? = 'paid', COALESCE(paid_at, CURRENT_TIMESTAMP), paid_at),
+                                     order_status = IF(? = 'paid' AND order_status IN ('awaiting_payment', 'payment_link_error'), 'new', order_status)
+                                 WHERE id = ? AND payment_status <> 'paid'"
+                            );
+                            $updatePayment->execute([
+                                $paymentId,
+                                $finalPaymentStatus,
+                                $finalPaymentStatus,
+                                $finalPaymentStatus,
+                                $orderId,
+                            ]);
+                            if ($updatePayment->rowCount() === 0) {
+                                $savedPaymentStatement = $pdo->prepare(
+                                    'SELECT payment_status, square_payment_id FROM orders WHERE id = ?'
+                                );
+                                $savedPaymentStatement->execute([$orderId]);
+                                $savedPayment = $savedPaymentStatement->fetch();
+                                if (
+                                    !is_array($savedPayment)
+                                    || $savedPayment['payment_status'] !== $finalPaymentStatus
+                                    || $savedPayment['square_payment_id'] !== $paymentId
+                                ) {
+                                    throw new RuntimeException('Square accepted the card payment, but its status could not be saved.');
+                                }
+                            }
+
+                            $_SESSION['cart'] = [];
+                            $_SESSION['checkout_submission_token'] = bin2hex(random_bytes(32));
+                            header('Location: order-confirmation.php?ref=' . rawurlencode($publicToken), true, 303);
+                            exit;
+                        }
                     } catch (PDOException $e) {
-                        error_log('Could not save the Square payment link for ' . $orderNumber . ': ' . $e->getMessage());
+                        error_log('Could not save Square card payment for ' . $orderNumber . ': ' . $e->getMessage());
                         http_response_code(503);
-                        $checkoutError = 'Your order was saved, but we could not finish setting up payment. Contact the school with order ' . $orderNumber . ' for help.';
+                        $checkoutError = 'We could not confirm the payment status. Contact the school with order ' . $orderNumber . ' before trying again.';
                     } catch (Square\Exceptions\SquareException | RuntimeException $e) {
-                        error_log('Square checkout link creation failed for ' . $orderNumber . ': ' . $e->getMessage());
-                        $pdo->prepare("UPDATE orders SET order_status = 'payment_link_error' WHERE id = ?")
-                            ->execute([$orderId]);
+                        error_log('Square card payment failed for ' . $orderNumber . ': ' . $e->getMessage());
                         http_response_code(503);
-                        $checkoutError = 'Your order was saved, but we could not open secure payment. Contact the school with order ' . $orderNumber . ' so we can help.';
+                        $checkoutError = 'We could not confirm the card payment. Contact the school with order ' . $orderNumber . ' before trying again.';
                     }
                 }
             }

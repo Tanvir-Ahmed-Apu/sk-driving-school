@@ -5,6 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once 'includes/package-catalog.php';
 require_once 'includes/db.php';
+require_once 'includes/square.php';
 
 $cart = isset($_SESSION['cart']) && is_array($_SESSION['cart']) ? $_SESSION['cart'] : [];
 $checkoutItems = [];
@@ -59,8 +60,16 @@ function checkoutFormValue(string $field): string
 require_once 'includes/header.php';
 
 $today = date('Y-m-d');
-$coursePrice = 50;
-$certificateDiscount = 30;
+$squareService = squarePaymentService();
+$squareApplicationId = $squareService->getApplicationId();
+$squareLocationId = $squareService->getLocationId();
+$squareEnvironment = $squareService->getEnvironment();
+$squarePaymentConfigured = $squareApplicationId !== ''
+    && $squareLocationId !== ''
+    && $squareService->getClient() instanceof \Square\SquareClient;
+$squareSdkUrl = $squareEnvironment === 'production'
+    ? 'https://web.squarecdn.com/v1/square.js'
+    : 'https://sandbox.web.squarecdn.com/v1/square.js';
 ?>
 <header class="site-header">
     <?php
@@ -91,9 +100,11 @@ $certificateDiscount = 30;
             <?php if ($checkoutError !== null): ?>
                 <div class="alert alert-danger mb-4" role="alert"><?= htmlspecialchars($checkoutError, ENT_QUOTES, 'UTF-8') ?></div>
             <?php endif; ?>
-            <form method="post" action="checkout.php" id="checkout-form" enctype="multipart/form-data">
+            <form method="post" action="checkout.php" id="checkout-form">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($checkoutCsrfToken, ENT_QUOTES, 'UTF-8') ?>">
                 <input type="hidden" name="checkout_token" value="<?= htmlspecialchars($checkoutSubmissionToken, ENT_QUOTES, 'UTF-8') ?>">
+                <input type="hidden" name="payment_attempt_id" value="<?= htmlspecialchars($checkoutPaymentAttemptId, ENT_QUOTES, 'UTF-8') ?>">
+                <input type="hidden" name="square_card_token" id="square-card-token">
             <div class="row g-4 align-items-start">
                 <div class="col-lg-7 order-2 order-lg-1">
                     <section class="checkout-card p-4 p-md-5 mb-4" aria-labelledby="billing-heading">
@@ -135,27 +146,6 @@ $certificateDiscount = 30;
                                 <input type="text" class="form-control" id="billing-zip" name="postal_code" maxlength="20" autocomplete="postal-code" value="<?= checkoutFormValue('postal_code') ?>" required>
                             </div>
                         </div>
-                    </section>
-
-                    <section class="checkout-card p-4 p-md-5 mb-4" aria-labelledby="permit-images-heading">
-                        <div class="checkout-section-heading mb-3">
-                            <span class="checkout-section-icon"><i class="bi bi-card-image" aria-hidden="true"></i></span>
-                            <div>
-                                <h2 class="h4 fw-bold mb-1" id="permit-images-heading">Learner permit photos</h2>
-                                <p class="text-muted small mb-0">Upload clear photos of both sides. Our team uses them to review your paid order.</p>
-                            </div>
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold" for="permit-front">Front of permit <span class="text-danger">*</span></label>
-                                <input class="form-control" type="file" id="permit-front" name="permit_front" accept="image/jpeg,image/png,image/webp" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold" for="permit-back">Back of permit <span class="text-danger">*</span></label>
-                                <input class="form-control" type="file" id="permit-back" name="permit_back" accept="image/jpeg,image/png,image/webp" required>
-                            </div>
-                        </div>
-                        <p class="form-text mt-3 mb-0">JPEG, PNG, or WebP only; maximum 5 MB per photo. Files are stored outside the public website and are available only to signed-in administrators.</p>
                     </section>
 
                     <section class="checkout-card p-4 p-md-5 mb-4" aria-labelledby="service-heading">
@@ -228,25 +218,6 @@ $certificateDiscount = 30;
                             <div class="form-text mt-2">Instructor requests depend on availability and will be confirmed by our team.</div>
                         </fieldset>
 
-                        <div class="checkout-addon mt-4">
-                            <div class="form-check form-switch d-flex align-items-start justify-content-between gap-3 p-0">
-                                <div>
-                                    <label class="form-check-label fw-bold" for="prelicensing-course">Add the 5-Hour Pre-Licensing Course</label>
-                                    <p class="text-muted small mb-0 mt-1">Add this if you still need the NY DMV MV-278 certificate. Bring your learner permit photo ID or DMV state ID and paper learner permit. The usual class time is 11:00 am, Monday–Saturday.</p>
-                                    <a href="faq.php" class="small fw-semibold text-decoration-none">Read course FAQs <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
-                                </div>
-                                <input class="form-check-input fs-4 flex-shrink-0 mt-1" type="checkbox" role="switch" id="prelicensing-course" name="add_course" value="1" aria-describedby="course-price" <?= checkoutFormValue('add_course') === '1' ? 'checked' : '' ?>>
-                            </div>
-                            <span class="checkout-addon-price" id="course-price">+$<?= number_format($coursePrice, 2) ?></span>
-                        </div>
-
-                        <label class="checkout-certificate-option mt-3" for="has-certificate">
-                            <input class="form-check-input mt-1" type="checkbox" id="has-certificate" name="has_certificate" value="1" <?= checkoutFormValue('has_certificate') === '1' ? 'checked' : '' ?>>
-                            <span>
-                                <strong>I already have a valid 5-hour course certificate</strong>
-                                <small class="d-block text-muted">Request the $<?= number_format($certificateDiscount, 2) ?> certificate discount. It can’t be combined with purchasing the course above; our team will confirm eligibility.</small>
-                            </span>
-                        </label>
                     </section>
 
                     <section class="checkout-card p-4 p-md-5" aria-labelledby="appointment-heading">
@@ -264,50 +235,13 @@ $certificateDiscount = 30;
                             <div class="form-text">Choose a future date. Your request is not a confirmed DMV appointment.</div>
                         </div>
 
-                        <fieldset class="mb-4">
-                            <legend class="form-label fw-semibold">Preferred time of day</legend>
-                            <div class="row g-2">
-                                <div class="col-4">
-                                    <input type="radio" class="btn-check" name="time" id="morning" value="morning" <?= checkoutFormValue('time') === '' || checkoutFormValue('time') === 'morning' ? 'checked' : '' ?>>
-                                    <label class="checkout-time-option" for="morning"><i class="bi bi-sunrise" aria-hidden="true"></i><span>Morning</span><small>7 am–12 pm</small></label>
-                                </div>
-                                <div class="col-4">
-                                    <input type="radio" class="btn-check" name="time" id="afternoon" value="afternoon" <?= checkoutFormValue('time') === 'afternoon' ? 'checked' : '' ?>>
-                                    <label class="checkout-time-option" for="afternoon"><i class="bi bi-sun" aria-hidden="true"></i><span>Afternoon</span><small>12 pm–5 pm</small></label>
-                                </div>
-                                <div class="col-4">
-                                    <input type="radio" class="btn-check" name="time" id="evening" value="evening" <?= checkoutFormValue('time') === 'evening' ? 'checked' : '' ?>>
-                                    <label class="checkout-time-option" for="evening"><i class="bi bi-sunset" aria-hidden="true"></i><span>Evening</span><small>5 pm–9 pm</small></label>
-                                </div>
-                            </div>
-                        </fieldset>
-
-                        <div class="checkout-note">
-                            <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
-                            <p class="mb-0">Rush road test appointments within one week may be available for an additional <strong>$50</strong>. Ask our team to confirm appointment availability and fees.</p>
+                        <div class="mb-4">
+                            <span class="form-label fw-semibold d-block">Preferred time</span>
+                            <input type="hidden" name="time" value="11:00 AM">
+                            <span class="checkout-class-time"><i class="bi bi-clock" aria-hidden="true"></i>Morning · 11:00 AM</span>
+                            <div class="form-text">The available preferred time is 11:00 AM. Our team will confirm your booking.</div>
                         </div>
 
-                        <div class="checkout-permit-upload mt-4">
-                            <label class="form-label fw-semibold" for="permit-upload">Learner permit document</label>
-                            <input class="form-control" type="file" id="permit-upload" accept="image/*,.pdf" disabled aria-describedby="permit-upload-note">
-                            <div class="form-text" id="permit-upload-note">Secure document upload is not available here yet. Please do not email or upload sensitive documents; our team will explain a secure option if needed.</div>
-                        </div>
-
-                        <div class="checkout-course-schedule mt-4" id="course-schedule" hidden>
-                            <h3 class="h6 fw-bold mb-1">Preferred 5-hour class schedule <span class="text-muted fw-normal">(optional)</span></h3>
-                            <p class="small text-muted mb-3">Choose a preferred date. Classes are typically scheduled Monday–Saturday at 11:00 am; our team will confirm availability.</p>
-                            <div class="row g-3 align-items-end">
-                                <div class="col-sm-7">
-                                    <label class="form-label fw-semibold" for="course-date">Preferred class date</label>
-                                    <input type="date" class="form-control" id="course-date" name="course_date" min="<?= htmlspecialchars($today, ENT_QUOTES, 'UTF-8') ?>" value="<?= checkoutFormValue('course_date') ?>">
-                                </div>
-                                <div class="col-sm-5">
-                                    <span class="form-label fw-semibold d-block">Usual class time</span>
-                                    <span class="checkout-class-time"><i class="bi bi-clock" aria-hidden="true"></i>11:00 am</span>
-                                </div>
-                            </div>
-                            <p class="small text-muted mb-0 mt-3" id="course-date-note">Classes are usually Monday–Saturday. We’ll confirm the date and seat availability.</p>
-                        </div>
                     </section>
                 </div>
 
@@ -329,17 +263,9 @@ $certificateDiscount = 30;
                                 <strong>$<?= number_format($item['line_total'], 2) ?></strong>
                             </div>
                         <?php endforeach; ?>
-                        <div class="checkout-summary-item" id="course-summary-row" hidden>
-                            <span>5-Hour Pre-Licensing Course</span>
-                            <strong>$<?= number_format($coursePrice, 2) ?></strong>
-                        </div>
                         <div class="checkout-summary-item checkout-subtotal">
                             <span>Subtotal</span>
                             <strong id="checkout-subtotal" aria-live="polite">$<?= number_format($basePrice, 2) ?></strong>
-                        </div>
-                        <div class="checkout-summary-item" id="certificate-discount-row" hidden>
-                            <span>5-hour certificate discount</span>
-                            <strong>−$<?= number_format($certificateDiscount, 2) ?></strong>
                         </div>
                         <div class="checkout-summary-item text-muted">
                             <span>Items</span>
@@ -351,14 +277,35 @@ $certificateDiscount = 30;
                         </div>
                         <div class="checkout-total">
                             <span>Estimated total</span>
-                            <strong id="checkout-total" aria-live="polite" aria-atomic="true" data-base-price="<?= $basePrice ?>" data-course-price="<?= $coursePrice ?>" data-certificate-discount="<?= $certificateDiscount ?>">$<?= number_format($basePrice, 2) ?></strong>
+                            <strong id="checkout-total" aria-live="polite" aria-atomic="true">$<?= number_format($basePrice, 2) ?></strong>
                         </div>
                         <p class="checkout-summary-disclaimer">Final service pricing may depend on your road test location. We’ll confirm the details before your appointment.</p>
 
                         <div class="checkout-payment-panel mt-4">
-                            <div class="checkout-demo-alert" role="note">
-                                <i class="bi bi-shield-lock-fill" aria-hidden="true"></i>
-                                <p class="mb-0">You’ll continue to Square’s secure hosted checkout to enter payment details. Card data is never collected or stored on this website.</p>
+                            <div class="checkout-card-payment">
+                                <div class="checkout-section-heading mb-3">
+                                    <span class="checkout-section-icon"><i class="bi bi-credit-card-2-front" aria-hidden="true"></i></span>
+                                    <div>
+                                        <h3 class="h5 fw-bold mb-1">Credit or debit card</h3>
+                                        <p class="text-muted small mb-0">Secure payment powered by Square</p>
+                                    </div>
+                                </div>
+                                <?php if ($squarePaymentConfigured): ?>
+                                    <div
+                                        id="square-card-container"
+                                        class="square-card-container"
+                                        data-application-id="<?= htmlspecialchars($squareApplicationId, ENT_QUOTES, 'UTF-8') ?>"
+                                        data-location-id="<?= htmlspecialchars($squareLocationId, ENT_QUOTES, 'UTF-8') ?>"
+                                    ></div>
+                                    <p class="small text-muted mt-2 mb-0">
+                                        Card details are encrypted by Square and never stored on this website.
+                                    </p>
+                                <?php else: ?>
+                                    <div class="alert alert-warning small mb-0" role="alert">
+                                        Square card payments are not configured yet. Check the application ID, access token, location ID, and environment.
+                                    </div>
+                                <?php endif; ?>
+                                <div id="square-payment-message" class="small mt-3" role="status" aria-live="polite"></div>
                             </div>
                             <div class="form-check checkout-terms-check mt-3">
                                 <input class="form-check-input" type="checkbox" id="checkout-terms" name="terms" value="1" required <?= checkoutFormValue('terms') === '1' ? 'checked' : '' ?>>
@@ -367,10 +314,10 @@ $certificateDiscount = 30;
                                     <a href="terms-and-condition.php" target="_blank" rel="noopener noreferrer">Terms &amp; Conditions</a>.
                                 </label>
                             </div>
-                            <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 mt-3 fw-bold" <?= $checkoutItems === [] ? 'disabled' : '' ?>>
-                                Continue to secure payment <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i>
+                            <button type="submit" id="checkout-submit-button" class="btn btn-primary w-100 rounded-pill py-3 mt-3 fw-bold" <?= $checkoutItems === [] || !$squarePaymentConfigured ? 'disabled' : '' ?>>
+                                Pay securely with Square <i class="bi bi-lock-fill ms-2" aria-hidden="true"></i>
                             </button>
-                            <p class="small text-muted text-center mt-3 mb-0">Your order is saved as pending and confirmed only after Square verifies payment.</p>
+                            <p class="small text-muted text-center mt-3 mb-0">Your order will appear for review after Square confirms payment.</p>
                         </div>
 
                         <div class="checkout-trust-row">
@@ -392,55 +339,11 @@ $certificateDiscount = 30;
     </section>
 </main>
 
+<?php if ($squarePaymentConfigured): ?>
+<script src="<?= htmlspecialchars($squareSdkUrl, ENT_QUOTES, 'UTF-8') ?>"></script>
+<?php endif; ?>
+<script src="assets/js/square-checkout.js"></script>
 <script>
-    const courseToggle = document.getElementById('prelicensing-course');
-    const certificateToggle = document.getElementById('has-certificate');
-    const totalDisplay = document.getElementById('checkout-total');
-    const subtotalDisplay = document.getElementById('checkout-subtotal');
-    const itemCountDisplay = document.getElementById('checkout-item-count');
-    const courseSummaryRow = document.getElementById('course-summary-row');
-    const certificateDiscountRow = document.getElementById('certificate-discount-row');
-    const courseSchedule = document.getElementById('course-schedule');
-    const courseDate = document.getElementById('course-date');
-    const courseDateNote = document.getElementById('course-date-note');
-
-    const updateCheckoutTotal = () => {
-        const basePrice = Number(totalDisplay.dataset.basePrice);
-        const coursePrice = Number(totalDisplay.dataset.coursePrice);
-        const certificateDiscount = Number(totalDisplay.dataset.certificateDiscount);
-        const baseCount = Number(itemCountDisplay.dataset.baseCount);
-        const subtotal = basePrice + (courseToggle.checked ? coursePrice : 0);
-        const discount = certificateToggle.checked ? certificateDiscount : 0;
-        const total = Math.max(0, subtotal - discount);
-
-        subtotalDisplay.textContent = `$${subtotal.toFixed(2)}`;
-        totalDisplay.textContent = `$${total.toFixed(2)}`;
-        const itemCount = baseCount + (courseToggle.checked ? 1 : 0);
-        itemCountDisplay.textContent = `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`;
-        courseSummaryRow.hidden = !courseToggle.checked;
-        certificateDiscountRow.hidden = !certificateToggle.checked;
-        courseSchedule.hidden = !courseToggle.checked;
-        courseDate.disabled = !courseToggle.checked;
-        if (!courseToggle.checked) {
-            courseDate.value = '';
-            courseDateNote.textContent = 'Classes are usually Monday–Saturday. We’ll confirm the date and seat availability.';
-        }
-    };
-
-    courseToggle.addEventListener('change', () => {
-        if (courseToggle.checked) {
-            certificateToggle.checked = false;
-        }
-        updateCheckoutTotal();
-    });
-
-    certificateToggle.addEventListener('change', () => {
-        if (certificateToggle.checked) {
-            courseToggle.checked = false;
-        }
-        updateCheckoutTotal();
-    });
-
     document.querySelectorAll('input[name="instructor"]').forEach((instructor) => {
         instructor.addEventListener('change', () => {
             document.querySelectorAll('.checkout-instructor-select span:last-child').forEach((label) => {
@@ -449,29 +352,6 @@ $certificateDiscount = 30;
             const selectedLabel = document.querySelector(`label[for="${instructor.id}"] .checkout-instructor-select span:last-child`);
             selectedLabel.textContent = 'Selected';
         });
-    });
-
-    courseDate.addEventListener('change', () => {
-        if (!courseDate.value) {
-            return;
-        }
-
-        const selectedDate = new Date(`${courseDate.value}T12:00:00`);
-        const isSunday = selectedDate.getDay() === 0;
-        courseDateNote.textContent = isSunday
-            ? 'Sunday classes are not part of the usual schedule. Please choose another day or contact us to ask.'
-            : 'Preference noted. Our team will confirm the date and seat availability.';
-    });
-
-    updateCheckoutTotal();
-    document.getElementById('checkout-form').addEventListener('submit', (event) => {
-        if (!event.currentTarget.reportValidity()) {
-            event.preventDefault();
-            return;
-        }
-        const submitButton = event.currentTarget.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-        submitButton.textContent = 'Preparing secure checkout…';
     });
 </script>
 

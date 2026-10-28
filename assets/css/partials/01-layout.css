@@ -128,31 +128,6 @@
     color: var(--bs-primary);
 }
 
-.checkout-addon {
-    position: relative;
-    padding: 1.15rem;
-    border: 1px solid #dce8f8;
-    border-radius: 1rem;
-    background: #f7faff;
-}
-
-.checkout-addon .form-check-label {
-    color: #202d3e;
-}
-
-.checkout-addon .form-check-input {
-    width: 2.7rem;
-    cursor: pointer;
-}
-
-.checkout-addon-price {
-    display: inline-block;
-    margin-top: 0.8rem;
-    color: var(--bs-primary);
-    font-size: 0.9rem;
-    font-weight: 700;
-}
-
 .checkout-instructor-option {
     display: flex;
     height: 100%;
@@ -235,34 +210,6 @@
     outline-offset: 2px;
 }
 
-.checkout-certificate-option {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 1rem;
-    border: 1px solid #dce8f8;
-    border-radius: 1rem;
-    background: #f7faff;
-    cursor: pointer;
-}
-
-.checkout-certificate-option .form-check-input {
-    flex: 0 0 auto;
-    margin-left: 0;
-}
-
-.checkout-certificate-option strong {
-    display: block;
-    color: #202d3e;
-    font-size: 0.9rem;
-}
-
-.checkout-certificate-option small {
-    margin-top: 0.25rem;
-    font-size: 0.8rem;
-    line-height: 1.5;
-}
-
 .checkout-section-heading {
     display: flex;
     align-items: center;
@@ -294,13 +241,6 @@
     background-color: #f1f4f8;
     color: #718096;
     cursor: not-allowed;
-}
-
-.checkout-course-schedule {
-    padding: 1.15rem;
-    border: 1px solid #e5ebf3;
-    border-radius: 1rem;
-    background: #fbfcfe;
 }
 
 .checkout-class-time {
@@ -367,50 +307,6 @@
     border-color: var(--bs-primary);
     background: #f2f7ff;
     color: #104b9d;
-}
-
-.checkout-time-option {
-    display: flex;
-    min-height: 106px;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.2rem;
-    padding: 0.75rem 0.35rem;
-    border: 1px solid #dce3ec;
-    border-radius: 0.9rem;
-    background: #fff;
-    color: #334155;
-    cursor: pointer;
-    text-align: center;
-    transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
-}
-
-.checkout-time-option i {
-    color: var(--bs-primary);
-    font-size: 1.1rem;
-}
-
-.checkout-time-option span {
-    font-size: 0.85rem;
-    font-weight: 700;
-}
-
-.checkout-time-option small {
-    color: #718096;
-    font-size: 0.72rem;
-}
-
-.btn-check:checked + .checkout-time-option {
-    border-color: var(--bs-primary);
-    background: #f2f7ff;
-    color: #104b9d;
-    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.1);
-}
-
-.btn-check:focus-visible + .checkout-time-option {
-    outline: 3px solid rgba(13, 110, 253, 0.35);
-    outline-offset: 2px;
 }
 
 .checkout-note,
@@ -519,6 +415,20 @@
     border: 1px dashed #cbd5e1;
     border-radius: 0.8rem;
     background: #fff;
+}
+
+.square-card-container {
+    min-height: 3.25rem;
+    padding: 0.8rem 0.95rem;
+    border: 1px solid #dce3ec;
+    border-radius: 0.8rem;
+    background: #fff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.square-card-container:focus-within {
+    border-color: rgba(13, 110, 253, 0.6);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.12);
 }
 
 .checkout-contact-action {
@@ -1240,10 +1150,8 @@ main {
 }
 
 .checkout-contact-action,
-.checkout-time-option,
 .checkout-payment-option,
 .checkout-instructor-option,
-.checkout-certificate-option,
 .cart-quantity-form .btn {
     transition:
         color 0.18s ease,
@@ -1304,10 +1212,8 @@ main {
         transform: translateY(-2px);
     }
 
-    .checkout-time-option:hover,
     .checkout-payment-option:hover,
-    .checkout-instructor-option:hover,
-    .checkout-certificate-option:hover {
+    .checkout-instructor-option:hover {
         border-color: rgba(13, 110, 253, 0.55);
         background-color: #f7faff;
     }

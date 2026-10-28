@@ -101,7 +101,7 @@ require __DIR__ . '/_header.php';
     <div class="admin-panel-heading">
         <div>
             <h2 class="h5 fw-bold mb-1">Paid orders awaiting review</h2>
-            <p class="text-secondary small mb-0">Review the student details and both learner permit photos before approving or declining.</p>
+            <p class="text-secondary small mb-0">Review the student details before approving or declining. Any permit photos uploaded with older orders remain available below.</p>
         </div>
         <span class="admin-status admin-status-pending"><?= count($orders) ?> pending</span>
     </div>
@@ -160,6 +160,6 @@ require __DIR__ . '/_header.php';
             </tbody>
         </table>
     </div>
-    <p class="admin-table-note mb-0">Showing up to 100 oldest paid orders awaiting review. Permit photos are served only to authenticated administrators.</p>
+    <p class="admin-table-note mb-0">Showing up to 100 oldest paid orders awaiting review. Any existing permit photos are served only to authenticated administrators.</p>
 </section>
 <?php require __DIR__ . '/_footer.php'; ?>
