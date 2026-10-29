@@ -7,6 +7,7 @@
             "email": "ahmed010tanvir@gmail.com"
         }
     ],
+    "license": "proprietary",
     "require": {
         "square/square": "^47.0",
         "vlucas/phpdotenv": "^5.7",
