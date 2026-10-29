@@ -1,6 +1,8 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white
             border-bottom py-3 sticky-top">
 
+    <?php $currentPage = basename($_SERVER['SCRIPT_NAME'] ?? ''); ?>
+
     <div class="container">
 
         <a class="navbar-brand d-flex align-items-center fw-bold"
@@ -39,22 +41,34 @@
 
             <ul class="navbar-nav mx-auto fw-medium">
                 <li class="nav-item">
-                    <a class="nav-link" href="index.php">Home</a>
+                    <a class="nav-link<?= $currentPage === 'index.php' ? ' active' : '' ?>"
+                       href="index.php"
+                       <?= $currentPage === 'index.php' ? 'aria-current="page"' : '' ?>>Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="packages.php">Packages</a>
+                    <a class="nav-link<?= $currentPage === 'packages.php' ? ' active' : '' ?>"
+                       href="packages.php"
+                       <?= $currentPage === 'packages.php' ? 'aria-current="page"' : '' ?>>Packages</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="gallery.php">Gallery</a>
+                    <a class="nav-link<?= $currentPage === 'gallery.php' ? ' active' : '' ?>"
+                       href="gallery.php"
+                       <?= $currentPage === 'gallery.php' ? 'aria-current="page"' : '' ?>>Gallery</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="about.php">About Us</a>
+                    <a class="nav-link<?= $currentPage === 'about.php' ? ' active' : '' ?>"
+                       href="about.php"
+                       <?= $currentPage === 'about.php' ? 'aria-current="page"' : '' ?>>About Us</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="faq.php">FAQs</a>
+                    <a class="nav-link<?= $currentPage === 'faq.php' ? ' active' : '' ?>"
+                       href="faq.php"
+                       <?= $currentPage === 'faq.php' ? 'aria-current="page"' : '' ?>>FAQs</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="contact.php">Contact</a>
+                    <a class="nav-link<?= $currentPage === 'contact.php' ? ' active' : '' ?>"
+                       href="contact.php"
+                       <?= $currentPage === 'contact.php' ? 'aria-current="page"' : '' ?>>Contact</a>
                 </li>
             </ul>
 
