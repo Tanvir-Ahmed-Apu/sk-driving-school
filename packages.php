@@ -10,6 +10,20 @@ if (isset($_GET['region']) && is_string($_GET['region']) && in_array($_GET['regi
     $selectedRegion = $_GET['region'];
 }
 
+$packageTabs = [
+    'regional' => ['label' => 'Regional Packages', 'panel' => 'regional-panel'],
+    'basic' => ['label' => 'Basic', 'panel' => 'basic-panel'],
+    'standard' => ['label' => 'Standard', 'panel' => 'standard-panel'],
+];
+$activeTab = 'regional';
+if ($selectedRegion === null
+    && isset($_GET['tab'])
+    && is_string($_GET['tab'])
+    && array_key_exists($_GET['tab'], $packageTabs)
+) {
+    $activeTab = $_GET['tab'];
+}
+
 function renderPackageCards(array $packages, string $category): void
 {
     foreach ($packages as $package): ?>
@@ -72,19 +86,15 @@ include 'includes/header.php';
             <div class="alert alert-warning" role="alert"><?= htmlspecialchars($productCatalogError, ENT_QUOTES, 'UTF-8') ?></div>
         <?php endif; ?>
         <ul class="nav nav-pills mb-5 gap-2" id="package-tabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active rounded-pill px-4" id="regional-tab" data-bs-toggle="pill" data-bs-target="#regional-panel" type="button" role="tab" aria-controls="regional-panel" aria-selected="true">Regional Packages</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link rounded-pill px-4" id="basic-tab" data-bs-toggle="pill" data-bs-target="#basic-panel" type="button" role="tab" aria-controls="basic-panel" aria-selected="false">Basic</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link rounded-pill px-4" id="standard-tab" data-bs-toggle="pill" data-bs-target="#standard-panel" type="button" role="tab" aria-controls="standard-panel" aria-selected="false">Standard</button>
-            </li>
+            <?php foreach ($packageTabs as $tabKey => $tab): $isActive = $activeTab === $tabKey; ?>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link<?= $isActive ? ' active' : '' ?> rounded-pill px-4" id="<?= $tabKey ?>-tab" data-bs-toggle="pill" data-bs-target="#<?= $tab['panel'] ?>" type="button" role="tab" aria-controls="<?= $tab['panel'] ?>" aria-selected="<?= $isActive ? 'true' : 'false' ?>"><?= htmlspecialchars($tab['label'], ENT_QUOTES, 'UTF-8') ?></button>
+                </li>
+            <?php endforeach; ?>
         </ul>
 
         <div class="tab-content" id="package-tabs-content">
-            <div class="tab-pane fade show active" id="regional-panel" role="tabpanel" aria-labelledby="regional-tab" tabindex="0">
+            <div class="tab-pane fade<?= $activeTab === 'regional' ? ' show active' : '' ?>" id="regional-panel" role="tabpanel" aria-labelledby="regional-tab" tabindex="0">
                 <section class="mb-5" id="regional-packages" aria-labelledby="regional-areas-heading">
                     <div class="mb-4">
                         <h2 class="h4 fw-bold mb-2" id="regional-areas-heading">Regional service areas</h2>
@@ -123,7 +133,7 @@ include 'includes/header.php';
                 <?php endif; ?>
             </div>
 
-            <div class="tab-pane fade" id="basic-panel" role="tabpanel" aria-labelledby="basic-tab" tabindex="0">
+            <div class="tab-pane fade<?= $activeTab === 'basic' ? ' show active' : '' ?>" id="basic-panel" role="tabpanel" aria-labelledby="basic-tab" tabindex="0">
                 <div class="mb-4">
                     <span class="text-primary fw-bold small text-uppercase tracking-wide">Choose Basic Package</span>
                     <h2 class="h3 fw-bold mt-2">Basic Packages</h2>
@@ -133,7 +143,7 @@ include 'includes/header.php';
                 </div>
             </div>
 
-            <div class="tab-pane fade" id="standard-panel" role="tabpanel" aria-labelledby="standard-tab" tabindex="0">
+            <div class="tab-pane fade<?= $activeTab === 'standard' ? ' show active' : '' ?>" id="standard-panel" role="tabpanel" aria-labelledby="standard-tab" tabindex="0">
                 <div class="mb-4">
                     <span class="text-primary fw-bold small text-uppercase tracking-wide">Choose Standard Package</span>
                     <h2 class="h3 fw-bold mt-2">Standard Packages</h2>

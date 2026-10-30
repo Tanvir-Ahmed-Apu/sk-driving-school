@@ -201,14 +201,14 @@ require_once 'includes/header.php';
                 <article class="home-package-card h-100">
                     <span class="home-feature-icon"><i class="bi bi-signpost-split" aria-hidden="true"></i></span>
                     <span class="badge bg-primary-subtle text-primary rounded-pill mt-4 mb-2 align-self-start">For new drivers</span>
-                    <h3 class="h4 fw-bold">Basic Packages</h3>
+                    <h3 class="h4 fw-bold">Regional Packages</h3>
                     <p class="text-muted">Start with foundational driving lessons and practice essential road skills at your pace.</p>
                     <ul class="list-unstyled small text-muted mb-4">
                         <li class="mb-2"><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i>45-minute driving lessons</li>
                         <li class="mb-2"><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i>Parking and road skills practice</li>
                         <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i>Multiple package sizes</li>
                     </ul>
-                    <a href="packages" class="btn btn-outline-primary rounded-pill fw-semibold mt-auto">Explore Regional Packages <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+                    <a href="packages?tab=regional" class="btn btn-outline-primary rounded-pill fw-semibold mt-auto">Explore Regional Packages <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
                 </article>
             </div>
             <div class="col-md-6 col-lg-4">
@@ -222,21 +222,21 @@ require_once 'includes/header.php';
                         <li class="mb-2"><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i>Road test preparation options</li>
                         <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i>Support from a professional instructor</li>
                     </ul>
-                    <a href="packages" class="btn btn-primary rounded-pill fw-semibold mt-auto">Compare Packages <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+                    <a href="packages?tab=standard" class="btn btn-primary rounded-pill fw-semibold mt-auto">View Standard Packages <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
                 </article>
             </div>
             <div class="col-md-6 col-lg-4">
                 <article class="home-package-card h-100">
                     <span class="home-feature-icon"><i class="bi bi-car-front" aria-hidden="true"></i></span>
                     <span class="badge bg-primary-subtle text-primary rounded-pill mt-4 mb-2 align-self-start">Book what you need</span>
-                    <h3 class="h4 fw-bold">Individual Services</h3>
+                    <h3 class="h4 fw-bold">Basic Packages</h3>
                     <p class="text-muted">Choose a single lesson, highway practice, or road-test vehicle service—without committing to a bundle.</p>
                     <ul class="list-unstyled small text-muted mb-4">
-                        <li class="mb-2"><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i>Individual driving lessons</li>
+                        <li class="mb-2"><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i>Driving lessons</li>
                         <li class="mb-2"><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i>Highway driving practice</li>
                         <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i>Road test car options</li>
                     </ul>
-                    <a href="packages" class="btn btn-outline-primary rounded-pill fw-semibold mt-auto">View Individual Services <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+                    <a href="packages?tab=basic" class="btn btn-outline-primary rounded-pill fw-semibold mt-auto">View Basic Packages <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
                 </article>
             </div>
         </div>
