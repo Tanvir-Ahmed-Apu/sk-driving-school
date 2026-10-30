@@ -324,14 +324,7 @@ $squareSdkUrl = $squareEnvironment === 'production'
                             <span><i class="bi bi-patch-check-fill" aria-hidden="true"></i> NY DMV School #11644</span>
                             <span><i class="bi bi-shield-lock-fill" aria-hidden="true"></i> Your information stays private</span>
                         </div>
-                    </aside>
-
-                    <aside class="checkout-campus-card mt-4 p-4" aria-labelledby="campus-heading">
-                        <h2 class="h6 fw-bold mb-3" id="campus-heading"><i class="bi bi-geo-alt text-primary me-2" aria-hidden="true"></i>Queens Main Campus · Room 204</h2>
-                        <address class="small text-muted mb-3">60-15 Roosevelt Ave, 2nd Fl<br>Woodside, Queens, NY 11377</address>
-                        <p class="small text-muted mb-3"><i class="bi bi-clock me-2" aria-hidden="true"></i>Office: Mon–Sat 7 am–10 pm · Sun 10 am–5 pm<br><span class="ms-4">Driving lessons: daily by appointment, 7 am–9 pm</span></p>
-                        <p class="small text-muted mb-0">Free pickup and drop-off may be available within a 10-minute drive of our office. <a href="contact" class="fw-semibold text-decoration-none">Ask us about your location.</a></p>
-                    </aside>
+                    </aside>   
                 </div>
                 </form>
             </div>

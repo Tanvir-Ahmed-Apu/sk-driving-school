@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/square.php';
+require_once __DIR__ . '/paid-order-email.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
@@ -288,6 +289,14 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                                     || $savedPayment['square_payment_id'] !== $paymentId
                                 ) {
                                     throw new RuntimeException('Square accepted the card payment, but its status could not be saved.');
+                                }
+                            }
+
+                            if ($paymentCompleted) {
+                                try {
+                                    sendPaidOrderReceipt($pdo, $orderId);
+                                } catch (Throwable $exception) {
+                                    error_log('Could not send payment receipt for order ' . $orderNumber . ': ' . $exception->getMessage());
                                 }
                             }
 

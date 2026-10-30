@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../includes/square.php';
+require_once __DIR__ . '/../includes/paid-order-email.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
     http_response_code(405);
@@ -89,30 +90,44 @@ if ($payment['status'] === 'COMPLETED') {
         && $matchedOrder['square_payment_id'] !== $payment['id']
     ) {
         error_log('Square payment event did not match the already-recorded payment for its order.');
-    } elseif ($matchedOrder['payment_status'] !== 'paid') {
-        $statement = $pdo->prepare(
-            "UPDATE orders
-             SET payment_status = 'paid',
-                 paid_at = COALESCE(paid_at, CURRENT_TIMESTAMP),
-                 order_status = IF(order_status IN ('awaiting_payment', 'payment_link_error'), 'new', order_status),
-                 square_payment_id = ?
-             WHERE id = ? AND total_cents = ? AND currency = 'USD' AND payment_status <> 'paid'
-               AND (square_payment_id IS NULL OR square_payment_id = ?)"
-        );
-        $statement->execute([$payment['id'], (int) $matchedOrder['id'], $amount, $payment['id']]);
-        if ($statement->rowCount() === 0) {
-            $checkOrder = $pdo->prepare(
-                'SELECT payment_status, square_payment_id FROM orders WHERE id = ?'
+    } else {
+        $paymentConfirmed = $matchedOrder['payment_status'] === 'paid';
+        if (!$paymentConfirmed) {
+            $statement = $pdo->prepare(
+                "UPDATE orders
+                 SET payment_status = 'paid',
+                     paid_at = COALESCE(paid_at, CURRENT_TIMESTAMP),
+                     order_status = IF(order_status IN ('awaiting_payment', 'payment_link_error'), 'new', order_status),
+                     square_payment_id = ?
+                 WHERE id = ? AND total_cents = ? AND currency = 'USD' AND payment_status <> 'paid'
+                   AND (square_payment_id IS NULL OR square_payment_id = ?)"
             );
-            $checkOrder->execute([(int) $matchedOrder['id']]);
-            $currentOrder = $checkOrder->fetch();
-            if (
-                !is_array($currentOrder)
-                || $currentOrder['payment_status'] !== 'paid'
-                || $currentOrder['square_payment_id'] !== $payment['id']
-            ) {
-                error_log('Square payment could not be applied to its matching order.');
+            $statement->execute([$payment['id'], (int) $matchedOrder['id'], $amount, $payment['id']]);
+            $paymentConfirmed = $statement->rowCount() > 0;
+            if (!$paymentConfirmed) {
+                $checkOrder = $pdo->prepare(
+                    'SELECT payment_status, square_payment_id FROM orders WHERE id = ?'
+                );
+                $checkOrder->execute([(int) $matchedOrder['id']]);
+                $currentOrder = $checkOrder->fetch();
+                $paymentConfirmed = is_array($currentOrder)
+                    && $currentOrder['payment_status'] === 'paid'
+                    && $currentOrder['square_payment_id'] === $payment['id'];
             }
+        }
+
+        if (!$paymentConfirmed) {
+            error_log('Square payment could not be applied to its matching order.');
+            http_response_code(500);
+            exit;
+        }
+
+        try {
+            sendPaidOrderReceipt($pdo, (int) $matchedOrder['id']);
+        } catch (Throwable $exception) {
+            error_log('Could not send payment receipt for Square order: ' . $exception->getMessage());
+            http_response_code(500);
+            exit;
         }
     }
 }

@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS orders (
     total_cents INT UNSIGNED NOT NULL,
     currency CHAR(3) NOT NULL DEFAULT 'USD',
     paid_at TIMESTAMP NULL,
+    receipt_email_sent_at TIMESTAMP NULL,
     terms_accepted_at TIMESTAMP NULL,
     order_status VARCHAR(32) NOT NULL DEFAULT 'awaiting_payment',
     payment_status VARCHAR(32) NOT NULL DEFAULT 'pending',

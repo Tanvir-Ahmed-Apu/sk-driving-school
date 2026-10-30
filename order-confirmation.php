@@ -27,7 +27,7 @@ require_once __DIR__ . '/includes/header.php';
             <h1 class="h3 fw-bold mt-3">Thank you for your order</h1>
             <p class="text-muted">Order <strong><?= htmlspecialchars($order['order_number'], ENT_QUOTES, 'UTF-8') ?></strong></p>
             <?php if ($order['payment_status'] === 'paid'): ?>
-                <div class="alert alert-success mx-auto" role="status">Square confirmed your payment. Your order is awaiting our team’s review; we’ll follow up to confirm your schedule.</div>
+                <div class="alert alert-success mx-auto" role="status">Sk-driving-school confirmed your payment. Your order is awaiting our team’s review; we’ll follow up to confirm your schedule.</div>
             <?php else: ?>
                 <div class="alert alert-info mx-auto" role="status">We’re waiting for Square to confirm the payment. This page does not treat a return from checkout as proof of payment.</div>
                 <a class="btn btn-outline-primary rounded-pill align-self-center" href="">Refresh payment status</a>
