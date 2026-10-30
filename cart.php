@@ -132,7 +132,7 @@ require_once 'includes/header.php';
                     <span class="cart-empty-icon"><i class="bi bi-cart-x" aria-hidden="true"></i></span>
                     <h2 class="h3 fw-bold mt-4" id="empty-cart-heading">Your cart is empty</h2>
                     <p class="text-muted mx-auto mb-4">Browse the Basic, Standard, or regional packages and add the options you’d like to discuss.</p>
-                    <a href="packages.php" class="btn btn-primary rounded-pill px-4 py-2 fw-semibold">
+                    <a href="packages" class="btn btn-primary rounded-pill px-4 py-2 fw-semibold">
                         Browse driving packages <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i>
                     </a>
                 </section>
@@ -176,7 +176,7 @@ require_once 'includes/header.php';
                             <?php endforeach; ?>
 
                             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4">
-                                <a href="packages.php" class="cart-continue-link"><i class="bi bi-arrow-left me-2" aria-hidden="true"></i>Continue browsing</a>
+                                <a href="packages" class="cart-continue-link"><i class="bi bi-arrow-left me-2" aria-hidden="true"></i>Continue browsing</a>
                                 <form method="post" action="cart.php">
                                     <input type="hidden" name="cart_token" value="<?= htmlspecialchars($cartToken, ENT_QUOTES, 'UTF-8') ?>">
                                     <input type="hidden" name="action" value="clear_cart">
@@ -202,7 +202,7 @@ require_once 'includes/header.php';
                                 <strong>$<?= number_format($cartTotal, 2) ?></strong>
                             </div>
                             <p class="small text-muted mt-3 mb-4">Final pricing and availability are confirmed by our team. Your cart does not reserve lessons or charge a payment.</p>
-                            <a href="checkout.php" class="btn btn-primary w-100 rounded-pill py-3 fw-bold">
+                            <a href="checkout" class="btn btn-primary w-100 rounded-pill py-3 fw-bold">
                                 Proceed to checkout <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i>
                             </a>
                             <a href="tel:+16464000666" class="cart-call-link"><i class="bi bi-telephone me-2" aria-hidden="true"></i>Call or text (646) 400-0666</a>

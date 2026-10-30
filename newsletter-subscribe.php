@@ -56,7 +56,7 @@ require_once __DIR__ . '/includes/header.php';
             <h1 class="h3 fw-bold">Subscription unavailable</h1>
             <p class="text-muted">We could not save your subscription right now. Please try again later.</p>
         <?php endif; ?>
-        <a href="index.php" class="btn btn-primary rounded-pill align-self-center mt-2">Return to home</a>
+        <a href="index" class="btn btn-primary rounded-pill align-self-center mt-2">Return to home</a>
     </section>
 </main>
 <?php include __DIR__ . '/includes/footer.php'; ?>

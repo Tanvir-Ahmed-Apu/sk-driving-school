@@ -109,7 +109,7 @@ require __DIR__ . '/_header.php';
                         <div class="admin-permit-images">
                             <?php foreach (['front' => $order['front_document_id'], 'back' => $order['back_document_id']] as $side => $documentId): ?>
                                 <?php if ($documentId !== null): ?>
-                                    <a href="permit-image.php?id=<?= (int) $documentId ?>" target="_blank" rel="noopener noreferrer" aria-label="View learner permit <?= adminEscape($side) ?> photo">
+                                    <a href="permit-image?id=<?= (int) $documentId ?>" target="_blank" rel="noopener noreferrer" aria-label="View learner permit <?= adminEscape($side) ?> photo">
                                         <img src="permit-image.php?id=<?= (int) $documentId ?>" alt="Permit <?= adminEscape($side) ?>" loading="lazy">
                                         <span><?= adminEscape(ucfirst($side)) ?></span>
                                     </a>

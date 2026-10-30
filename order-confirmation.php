@@ -32,7 +32,7 @@ require_once __DIR__ . '/includes/header.php';
                 <div class="alert alert-info mx-auto" role="status">We’re waiting for Square to confirm the payment. This page does not treat a return from checkout as proof of payment.</div>
                 <a class="btn btn-outline-primary rounded-pill align-self-center" href="">Refresh payment status</a>
             <?php endif; ?>
-            <a href="index.php" class="text-decoration-none">Return to home</a>
+            <a href="index" class="text-decoration-none">Return to home</a>
         </section>
     <?php endif; ?>
 </main>

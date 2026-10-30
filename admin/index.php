@@ -218,7 +218,7 @@ require __DIR__ . '/_header.php';
             <h2 class="h5 fw-bold mb-1">Recent orders</h2>
             <p class="text-secondary small mb-0">Latest customer activity and payment status.</p>
         </div>
-        <a href="package-sales.php" class="btn btn-outline-primary btn-sm">View package sales <i class="bi bi-arrow-right ms-1"></i></a>
+        <a href="package-sales" class="btn btn-outline-primary btn-sm">View package sales <i class="bi bi-arrow-right ms-1"></i></a>
     </div>
     <div class="table-responsive">
         <table class="table admin-orders-table align-middle mb-0">

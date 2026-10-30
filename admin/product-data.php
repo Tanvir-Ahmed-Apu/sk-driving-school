@@ -178,7 +178,7 @@ require __DIR__ . '/_header.php';
             <input class="form-control" id="product-search" name="q" value="<?= adminEscape($search) ?>" placeholder="Name or subtitle">
         </div>
         <button class="btn btn-primary align-self-end" type="submit">Filter</button>
-        <a class="btn btn-outline-secondary align-self-end" href="product-data.php">Reset</a>
+        <a class="btn btn-outline-secondary align-self-end" href="product-data">Reset</a>
     </form>
     <p class="text-secondary small mb-3">Showing <?= count($products) ?> product<?= count($products) === 1 ? '' : 's' ?>.</p>
     <?php if ($products === []): ?>

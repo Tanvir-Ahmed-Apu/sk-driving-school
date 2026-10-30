@@ -70,10 +70,10 @@ $teamMembers = [
                     <h1 class="display-4 fw-bold lh-sm mb-4">Helping New York drivers feel ready for the road.</h1>
                     <p class="lead text-muted mb-4">SK Driving School Inc offers behind-the-wheel lessons, road test support, and online pre-licensing classes for learners across New York and nearby communities.</p>
                     <div class="d-flex flex-column flex-sm-row gap-3">
-                        <a href="packages.php" class="btn btn-primary btn-lg rounded-pill px-4">
+                        <a href="packages" class="btn btn-primary btn-lg rounded-pill px-4">
                             Explore Packages <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
                         </a>
-                        <a href="contact.php" class="btn btn-outline-primary btn-lg rounded-pill px-4">Talk to Our Team</a>
+                        <a href="contact" class="btn btn-outline-primary btn-lg rounded-pill px-4">Talk to Our Team</a>
                     </div>
                 </div>
                 <div class="col-lg-4">

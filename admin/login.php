@@ -63,7 +63,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 </head>
 <body class="admin-login-page">
     <main class="admin-login-card">
-        <a class="admin-brand" href="../index.php"><span>SK</span> Driving School</a>
+        <a class="admin-brand" href="../index"><span>SK</span> Driving School</a>
         <p class="admin-eyebrow mt-4 mb-2">Administration</p>
         <h1 class="h3 fw-bold mb-2">Sign in</h1>
         <p class="text-secondary mb-4">Manage customer orders and payment status.</p>

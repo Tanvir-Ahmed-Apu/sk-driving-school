@@ -3,7 +3,7 @@
         <div class="footer-main">
             <div class="row g-5">
                 <div class="col-lg-4">
-                    <a class="footer-brand" href="index.php">
+                    <a class="footer-brand" href="index">
                         <span class="footer-brand-mark" aria-hidden="true">SK</span>
                         <span>SK Driving School</span>
                     </a>
@@ -14,12 +14,12 @@
                 <div class="col-6 col-lg-2">
                     <h2 class="footer-heading">Explore</h2>
                     <ul class="footer-links">
-                        <li><a href="index.php">Home</a></li>
-                        <li><a href="packages.php">Driving Packages</a></li>
-                        <li><a href="gallery.php">Gallery</a></li>
-                        <li><a href="about.php">About Us</a></li>
-                        <li><a href="faq.php">FAQs</a></li>
-                        <li><a href="terms-and-condition.php">Terms &amp; Conditions</a></li>
+                        <li><a href="index">Home</a></li>
+                        <li><a href="packages">Driving Packages</a></li>
+                        <li><a href="gallery">Gallery</a></li>
+                        <li><a href="about">About Us</a></li>
+                        <li><a href="faq">FAQs</a></li>
+                        <li><a href="terms-and-condition">Terms &amp; Conditions</a></li>
                     </ul>
                 </div>
 
@@ -44,7 +44,7 @@
                         <span>(646) 400-0666</span>
                     </a>
                     <p class="footer-hours"><i class="bi bi-clock me-2" aria-hidden="true"></i>Mon–Sat: 7 am–10 pm <span aria-hidden="true">·</span> Sun: 10 am–5 pm</p>
-                    <a class="footer-cta" href="packages.php">Find your driving package <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                    <a class="footer-cta" href="packages">Find your driving package <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
                     <?php
                     if (!isset($_SESSION['newsletter_csrf']) || !is_string($_SESSION['newsletter_csrf'])) {
                         $_SESSION['newsletter_csrf'] = bin2hex(random_bytes(32));
@@ -68,7 +68,7 @@
 
         <div class="footer-bottom">
             <p class="mb-0">© <?= date('Y') ?> SK Driving School Inc. All rights reserved.</p>
-            <a href="contact.php" class="footer-bottom-link">Questions? We’re here to help <i class="bi bi-arrow-up-right ms-1" aria-hidden="true"></i></a>
+            <a href="contact" class="footer-bottom-link">Questions? We’re here to help <i class="bi bi-arrow-up-right ms-1" aria-hidden="true"></i></a>
         </div>
     </div>
 </footer>

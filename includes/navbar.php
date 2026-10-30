@@ -6,7 +6,7 @@
     <div class="container">
 
         <a class="navbar-brand d-flex align-items-center fw-bold"
-           href="index.php">
+           href="/">
 
             <img
                 src="assets/images/logo.png"
@@ -42,39 +42,39 @@
             <ul class="navbar-nav mx-auto fw-medium">
                 <li class="nav-item">
                     <a class="nav-link<?= $currentPage === 'index.php' ? ' active' : '' ?>"
-                       href="index.php"
+                       href="/"
                        <?= $currentPage === 'index.php' ? 'aria-current="page"' : '' ?>>Home</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link<?= $currentPage === 'packages.php' ? ' active' : '' ?>"
-                       href="packages.php"
+                       href="packages"
                        <?= $currentPage === 'packages.php' ? 'aria-current="page"' : '' ?>>Packages</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link<?= $currentPage === 'gallery.php' ? ' active' : '' ?>"
-                       href="gallery.php"
+                       href="gallery"
                        <?= $currentPage === 'gallery.php' ? 'aria-current="page"' : '' ?>>Gallery</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link<?= $currentPage === 'about.php' ? ' active' : '' ?>"
-                       href="about.php"
+                       href="about"
                        <?= $currentPage === 'about.php' ? 'aria-current="page"' : '' ?>>About Us</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link<?= $currentPage === 'faq.php' ? ' active' : '' ?>"
-                       href="faq.php"
+                       href="faq"
                        <?= $currentPage === 'faq.php' ? 'aria-current="page"' : '' ?>>FAQs</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link<?= $currentPage === 'contact.php' ? ' active' : '' ?>"
-                       href="contact.php"
+                       href="contact"
                        <?= $currentPage === 'contact.php' ? 'aria-current="page"' : '' ?>>Contact</a>
                 </li>
             </ul>
 
             <div class="navbar-actions d-flex align-items-center justify-content-between justify-content-lg-end w-100 w-lg-auto mt-3 mt-lg-0 gap-3">
 
-                <a href="cart.php"
+                <a href="cart"
                    class="text-dark position-relative"
                    aria-label="Shopping cart">
 
@@ -99,7 +99,7 @@
                     <?php endif; ?>
                 </a>
 
-                <a href="packages.php"
+                <a href="packages"
                    class="btn btn-primary rounded-pill px-4 py-2 fw-semibold">
                     Book a Drive
                 </a>

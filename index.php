@@ -38,10 +38,10 @@ require_once 'includes/header.php';
                                 Build confidence behind the wheel with patient instruction, practical skills, and a plan that fits your experience.
                             </p>
                             <div class="d-flex flex-column flex-sm-row gap-3">
-                                <a href="packages.php" class="btn btn-primary btn-lg rounded-pill px-4 py-3 fw-bold shadow">
+                                <a href="packages" class="btn btn-primary btn-lg rounded-pill px-4 py-3 fw-bold shadow">
                                     Explore Packages <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i>
                                 </a>
-                                <a href="contact.php" class="btn btn-outline-light btn-lg rounded-pill px-4 py-3 fw-bold">
+                                <a href="contact" class="btn btn-outline-light btn-lg rounded-pill px-4 py-3 fw-bold">
                                     Schedule an Assessment
                                 </a>
                             </div>
@@ -72,10 +72,10 @@ require_once 'includes/header.php';
                                 Get focused practice and road-test preparation from instructors who know New York roads.
                             </p>
                             <div class="d-flex flex-column flex-sm-row gap-3">
-                                <a href="packages.php" class="btn btn-primary btn-lg rounded-pill px-4 py-3 fw-bold shadow">
+                                <a href="packages" class="btn btn-primary btn-lg rounded-pill px-4 py-3 fw-bold shadow">
                                     Compare Packages <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i>
                                 </a>
-                                <a href="faq.php" class="btn btn-outline-light btn-lg rounded-pill px-4 py-3 fw-bold">
+                                <a href="faq" class="btn btn-outline-light btn-lg rounded-pill px-4 py-3 fw-bold">
                                     View FAQs
                                 </a>
                             </div>
@@ -106,10 +106,10 @@ require_once 'includes/header.php';
                                 Need a single lesson, highway practice, or help getting to your road test? We can help you choose the right service.
                             </p>
                             <div class="d-flex flex-column flex-sm-row gap-3">
-                                <a href="packages.php" class="btn btn-primary btn-lg rounded-pill px-4 py-3 fw-bold shadow">
+                                <a href="packages" class="btn btn-primary btn-lg rounded-pill px-4 py-3 fw-bold shadow">
                                     View Individual Services <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i>
                                 </a>
-                                <a href="contact.php" class="btn btn-outline-light btn-lg rounded-pill px-4 py-3 fw-bold">
+                                <a href="contact" class="btn btn-outline-light btn-lg rounded-pill px-4 py-3 fw-bold">
                                     Talk to Our Team
                                 </a>
                             </div>
@@ -208,7 +208,7 @@ require_once 'includes/header.php';
                         <li class="mb-2"><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i>Parking and road skills practice</li>
                         <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i>Multiple package sizes</li>
                     </ul>
-                    <a href="packages.php" class="btn btn-outline-primary rounded-pill fw-semibold mt-auto">Explore Regional Packages <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+                    <a href="packages" class="btn btn-outline-primary rounded-pill fw-semibold mt-auto">Explore Regional Packages <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
                 </article>
             </div>
             <div class="col-md-6 col-lg-4">
@@ -222,7 +222,7 @@ require_once 'includes/header.php';
                         <li class="mb-2"><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i>Road test preparation options</li>
                         <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i>Support from a professional instructor</li>
                     </ul>
-                    <a href="packages.php" class="btn btn-primary rounded-pill fw-semibold mt-auto">Compare Packages <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+                    <a href="packages" class="btn btn-primary rounded-pill fw-semibold mt-auto">Compare Packages <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
                 </article>
             </div>
             <div class="col-md-6 col-lg-4">
@@ -236,11 +236,11 @@ require_once 'includes/header.php';
                         <li class="mb-2"><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i>Highway driving practice</li>
                         <li><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i>Road test car options</li>
                     </ul>
-                    <a href="packages.php" class="btn btn-outline-primary rounded-pill fw-semibold mt-auto">View Individual Services <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
+                    <a href="packages" class="btn btn-outline-primary rounded-pill fw-semibold mt-auto">View Individual Services <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></a>
                 </article>
             </div>
         </div>
-        <p class="text-center small text-muted mt-4 mb-0">Package availability and pricing vary by service area. <a href="packages.php" class="fw-semibold">Choose your region to see current details.</a></p>
+        <p class="text-center small text-muted mt-4 mb-0">Package availability and pricing vary by service area. <a href="packages" class="fw-semibold">Choose your region to see current details.</a></p>
     </div>
 </section>
 
@@ -300,7 +300,7 @@ require_once 'includes/header.php';
 
               
                     <div class="mt-auto">
-                        <a href="contact.php"
+                        <a href="contact"
                             class="btn bg-white text-primary contact-btn px-4 py-3 fw-bold rounded-pill d-inline-flex align-items-center gap-2">
                             Contact Us <i class="bi bi-arrow-right"></i>
                         </a>
