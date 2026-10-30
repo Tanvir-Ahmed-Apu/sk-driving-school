@@ -26,7 +26,7 @@
                 <div class="col-6 col-lg-2">
                     <h2 class="footer-heading">Get in touch</h2>
                     <ul class="footer-links">
-                        <li><a href="contact.php">Contact Us</a></li>
+                        <li><a href="contact">Contact Us</a></li>
                         <li><a href="tel:+16464000666">Call or text us</a></li>
                         <li><a href="mailto:skdrivingschoolny@gmail.com">Email our team</a></li>
                         <li><a href="https://www.google.com/maps/search/?api=1&amp;query=60-15%20Roosevelt%20Ave%2C%202nd%20Fl%2C%20Woodside%2C%20Queens%2C%20NY%2011377" target="_blank" rel="noopener noreferrer">Get directions</a></li>

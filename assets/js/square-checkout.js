@@ -83,7 +83,7 @@
             HTMLFormElement.prototype.submit.call(checkoutForm);
         } catch {
             checkoutSubmitButton.disabled = false;
-            checkoutSubmitButton.textContent = 'Pay securely with Square';
+            checkoutSubmitButton.textContent = 'Pay securely';
             setPaymentMessage('We could not verify this card. Check the details or try another card.', true);
         }
     });

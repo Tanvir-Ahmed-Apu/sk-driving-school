@@ -24,19 +24,43 @@
     }
 
     .cart-line {
-        align-items: flex-start;
-        flex-direction: column;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-areas:
+            "item item"
+            "unit quantity"
+            "total remove";
+        align-items: start;
         gap: 1rem;
     }
 
-    .cart-line-actions {
-        width: 100%;
-        align-items: flex-start;
+    .cart-line-info {
+        grid-area: item;
+    }
+
+    .cart-line-detail:nth-of-type(2) {
+        grid-area: unit;
+    }
+
+    .cart-line-detail:nth-of-type(3) {
+        grid-area: quantity;
     }
 
     .cart-line-total {
-        align-self: flex-end;
-        margin-top: -2rem;
+        grid-area: total;
+        align-self: center;
+        margin-top: 0;
+    }
+
+    .cart-line-actions {
+        grid-area: remove;
+        width: 100%;
+        align-items: flex-start;
+        justify-content: center;
+    }
+
+    .cart-line-actions form,
+    .cart-line-actions .btn {
+        width: 100%;
     }
 
     .checkout-instructor-option {

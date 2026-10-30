@@ -315,7 +315,7 @@ $squareSdkUrl = $squareEnvironment === 'production'
                                 </label>
                             </div>
                             <button type="submit" id="checkout-submit-button" class="btn btn-primary w-100 rounded-pill py-3 mt-3 fw-bold" <?= $checkoutItems === [] || !$squarePaymentConfigured ? 'disabled' : '' ?>>
-                                Pay securely with Square <i class="bi bi-lock-fill ms-2" aria-hidden="true"></i>
+                                Pay securely <i class="bi bi-lock-fill ms-2" aria-hidden="true"></i>
                             </button>
                             <p class="small text-muted text-center mt-3 mb-0">Your order will appear for review after Square confirms payment.</p>
                         </div>

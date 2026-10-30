@@ -4,67 +4,13 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 require_once 'includes/package-catalog.php';
-$cartToken = $_SESSION['cart_token'] ?? '';
-if (!is_string($cartToken) || $cartToken === '') {
-    $cartToken = bin2hex(random_bytes(32));
-    $_SESSION['cart_token'] = $cartToken;
-}
-
-$cartNotice = null;
-if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && ($_POST['action'] ?? '') === 'add_to_cart') {
-    $submittedToken = $_POST['cart_token'] ?? '';
-    $category = $_POST['category'] ?? '';
-    $productIdValue = $_POST['product_id'] ?? '';
-    $region = $_POST['region'] ?? '';
-    $productId = is_string($productIdValue) && ctype_digit($productIdValue) ? (int) $productIdValue : 0;
-
-    if (
-        !is_string($submittedToken)
-        || !hash_equals($cartToken, $submittedToken)
-        || !is_string($category)
-        || !isset($productsById[$productId])
-        || $productsById[$productId]['category'] !== $category
-        || !is_string($region)
-        || $productsById[$productId]['region'] !== $region
-        || ($region !== '' && !in_array($region, $regionalServiceAreas, true))
-    ) {
-        http_response_code(400);
-        $cartNotice = 'We could not add that package. Please refresh the page and try again.';
-    } else {
-        $cart = $_SESSION['cart'] ?? [];
-        if (!is_array($cart)) {
-            $cart = [];
-        }
-
-        $itemId = $region . '|' . $category . '|' . $productId;
-        $currentQuantity = isset($cart[$itemId]) && is_int($cart[$itemId]) ? $cart[$itemId] : 0;
-        if ($currentQuantity >= 99) {
-            $cartNotice = 'The maximum quantity for this package is 99.';
-        } else {
-            $cart[$itemId] = $currentQuantity + 1;
-            $_SESSION['cart'] = $cart;
-            $_SESSION['cart_notice'] = $productsById[$productId]['name'] . ' added to your cart.';
-            $redirect = 'packages.php';
-            if ($region !== '') {
-                $redirect .= '?region=' . rawurlencode($region);
-            }
-            header('Location: ' . $redirect);
-            exit;
-        }
-    }
-}
-
-if (isset($_SESSION['cart_notice']) && is_string($_SESSION['cart_notice'])) {
-    $cartNotice = $_SESSION['cart_notice'];
-    unset($_SESSION['cart_notice']);
-}
 
 $selectedRegion = null;
 if (isset($_GET['region']) && is_string($_GET['region']) && in_array($_GET['region'], $regionalServiceAreas, true)) {
     $selectedRegion = $_GET['region'];
 }
 
-function renderPackageCards(array $packages, string $category, string $region, string $cartToken): void
+function renderPackageCards(array $packages, string $category): void
 {
     foreach ($packages as $package): ?>
         <div class="col-lg-4 col-md-6">
@@ -84,16 +30,10 @@ function renderPackageCards(array $packages, string $category, string $region, s
                         <li class="mb-2"><i class="bi bi-check2 text-primary me-2" aria-hidden="true"></i><?= htmlspecialchars($feature, ENT_QUOTES, 'UTF-8') ?></li>
                     <?php endforeach; ?>
                 </ul>
-                <form method="post" action="packages.php" class="mt-auto">
-                    <input type="hidden" name="action" value="add_to_cart">
-                    <input type="hidden" name="cart_token" value="<?= htmlspecialchars($cartToken, ENT_QUOTES, 'UTF-8') ?>">
-                    <input type="hidden" name="category" value="<?= htmlspecialchars($category, ENT_QUOTES, 'UTF-8') ?>">
-                    <input type="hidden" name="product_id" value="<?= (int) $package['id'] ?>">
-                    <input type="hidden" name="region" value="<?= htmlspecialchars($region, ENT_QUOTES, 'UTF-8') ?>">
-                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-semibold">
-                        <i class="bi bi-cart-plus me-2" aria-hidden="true"></i>Add to cart
-                    </button>
-                </form>
+                <a class="btn btn-primary w-100 rounded-pill py-2 fw-semibold mt-auto"
+                    href="product?id=<?= (int) $package['id'] ?>">
+                    <i class="bi bi-eye me-2" aria-hidden="true"></i>View product
+                </a>
             </article>
         </div>
     <?php endforeach;
@@ -130,12 +70,6 @@ include 'includes/header.php';
     <div class="container">
         <?php if ($productCatalogError !== null): ?>
             <div class="alert alert-warning" role="alert"><?= htmlspecialchars($productCatalogError, ENT_QUOTES, 'UTF-8') ?></div>
-        <?php endif; ?>
-        <?php if ($cartNotice !== null): ?>
-            <div class="alert alert-<?= http_response_code() === 400 ? 'danger' : 'success' ?> alert-dismissible fade show" role="status">
-                <?= htmlspecialchars($cartNotice, ENT_QUOTES, 'UTF-8') ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
         <?php endif; ?>
         <ul class="nav nav-pills mb-5 gap-2" id="package-tabs" role="tablist">
             <li class="nav-item" role="presentation">
@@ -181,7 +115,7 @@ include 'includes/header.php';
                                     <?= htmlspecialchars($category, ENT_QUOTES, 'UTF-8') ?>
                                 </h3>
                                 <div class="row g-4">
-                                    <?php renderPackageCards($packages, $category, $selectedRegion, $cartToken); ?>
+                                    <?php renderPackageCards($packages, $category); ?>
                                 </div>
                             </section>
                         <?php endforeach; ?>
@@ -195,7 +129,7 @@ include 'includes/header.php';
                     <h2 class="h3 fw-bold mt-2">Basic Packages</h2>
                 </div>
                 <div class="row g-4">
-                    <?php renderPackageCards($categoryPackages['Basic'] ?? [], 'Basic', '', $cartToken); ?>
+                    <?php renderPackageCards($categoryPackages['Basic'] ?? [], 'Basic'); ?>
                 </div>
             </div>
 
@@ -205,7 +139,7 @@ include 'includes/header.php';
                     <h2 class="h3 fw-bold mt-2">Standard Packages</h2>
                 </div>
                 <div class="row g-4">
-                    <?php renderPackageCards($categoryPackages['Standard'] ?? [], 'Standard', '', $cartToken); ?>
+                    <?php renderPackageCards($categoryPackages['Standard'] ?? [], 'Standard'); ?>
                 </div>
             </div>
         </div>

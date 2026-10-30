@@ -15,6 +15,11 @@ $cart = isset($_SESSION['cart']) && is_array($_SESSION['cart']) ? $_SESSION['car
 $cartError = null;
 $cartNotice = null;
 
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && isset($_SESSION['cart_notice']) && is_string($_SESSION['cart_notice'])) {
+    $cartNotice = $_SESSION['cart_notice'];
+    unset($_SESSION['cart_notice']);
+}
+
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $submittedToken = $_POST['cart_token'] ?? '';
     $action = $_POST['action'] ?? '';
@@ -153,23 +158,34 @@ require_once 'includes/header.php';
                                         <?php if ($line['region'] !== ''): ?>
                                             <p class="small text-muted mb-1"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i><?= htmlspecialchars($line['region'], ENT_QUOTES, 'UTF-8') ?></p>
                                         <?php endif; ?>
-                                        <p class="small text-muted mb-0">$<?= number_format($line['price'], 2) ?> each</p>
                                     </div>
-                                    <div class="cart-line-actions">
+                                    <div class="cart-line-detail">
+                                        <span class="cart-line-label">Unit price</span>
+                                        <strong>$<?= number_format($line['price'], 2) ?></strong>
+                                    </div>
+                                    <div class="cart-line-detail">
+                                        <span class="cart-line-label">Quantity</span>
                                         <form method="post" action="cart.php" class="cart-quantity-form">
                                             <input type="hidden" name="cart_token" value="<?= htmlspecialchars($cartToken, ENT_QUOTES, 'UTF-8') ?>">
                                             <input type="hidden" name="action" value="update_quantity">
                                             <input type="hidden" name="item_id" value="<?= htmlspecialchars($line['id'], ENT_QUOTES, 'UTF-8') ?>">
                                             <label class="visually-hidden" for="quantity-<?= (int) $lineIndex ?>">Quantity for <?= htmlspecialchars($line['name'], ENT_QUOTES, 'UTF-8') ?></label>
-                                            <input class="form-control form-control-sm" type="number" id="quantity-<?= (int) $lineIndex ?>" min="1" max="99" name="quantity" value="<?= $line['quantity'] ?>">
+                                            <input class="form-control form-control-sm" type="number" id="quantity-<?= (int) $lineIndex ?>" min="1" max="99" name="quantity" value="<?= $line['quantity'] ?>" required>
                                             <button type="submit" class="btn btn-sm btn-outline-primary" aria-label="Update quantity for <?= htmlspecialchars($line['name'], ENT_QUOTES, 'UTF-8') ?>">Update</button>
                                         </form>
-                                        <strong class="cart-line-total">$<?= number_format($line['line_total'], 2) ?></strong>
+                                    </div>
+                                    <div class="cart-line-detail cart-line-total">
+                                        <span class="cart-line-label">Line total</span>
+                                        <strong>$<?= number_format($line['line_total'], 2) ?></strong>
+                                    </div>
+                                    <div class="cart-line-actions">
                                         <form method="post" action="cart.php">
                                             <input type="hidden" name="cart_token" value="<?= htmlspecialchars($cartToken, ENT_QUOTES, 'UTF-8') ?>">
                                             <input type="hidden" name="action" value="remove_item">
                                             <input type="hidden" name="item_id" value="<?= htmlspecialchars($line['id'], ENT_QUOTES, 'UTF-8') ?>">
-                                            <button type="submit" class="btn btn-link btn-sm text-danger p-0">Remove</button>
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-trash me-1" aria-hidden="true"></i>Remove
+                                            </button>
                                         </form>
                                     </div>
                                 </article>
@@ -180,7 +196,9 @@ require_once 'includes/header.php';
                                 <form method="post" action="cart.php">
                                     <input type="hidden" name="cart_token" value="<?= htmlspecialchars($cartToken, ENT_QUOTES, 'UTF-8') ?>">
                                     <input type="hidden" name="action" value="clear_cart">
-                                    <button type="submit" class="btn btn-link btn-sm text-muted p-0">Clear cart</button>
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-trash me-1" aria-hidden="true"></i>Clear all packages
+                                    </button>
                                 </form>
                             </div>
                         </section>
